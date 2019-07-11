@@ -36,6 +36,7 @@ ENV PYBIND11 /SEAL/pybind11
 
 # Install PySeal
 COPY /seal /SEAL/PySeal/seal
+COPY /tests /SEAL/PySeal/tests
 COPY /requirements.txt /SEAL/PySeal/requirements.txt
 COPY /setup.py /SEAL/PySeal/setup.py
 WORKDIR /SEAL/PySeal

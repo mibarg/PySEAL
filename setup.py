@@ -27,16 +27,17 @@ for key, value in cfg_vars.items():
     if type(value) == str:
         cfg_vars[key] = value.replace('-Wstrict-prototypes', '')
 
+PY_INCLUDE = join(dirname(dirname(sys.executable)), "include/site/", basename(sys.executable))
+
 ext_modules = [
     Extension(
         '_primitives',
         ['seal/wrapper.cpp'],
-        include_dirs=['/usr/include/python3.5',
-                      os.path.join(PYBIND11_ROOT, 'include'),
-                      os.path.join(SEAL_ROOT, 'SEAL')],
+        include_dirs=['/usr/include/python3', PY_INCLUDE, os.path.join(PYBIND11_ROOT, 'include')] +
+                     [join(SEAL_ROOT, 'SEAL') if SEAL_ROOT else ''],
         language='c++',
         extra_compile_args=['-std=c++11'],
-        extra_objects=[os.path.join(SEAL_ROOT, 'bin/libseal.a')],
+        extra_objects=[join(SEAL_ROOT, 'bin/libseal.a') if SEAL_ROOT else ''],
     ),
 ]
 
