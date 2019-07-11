@@ -43,5 +43,4 @@ setup(
     description='Python wrapper for SEAL',
     ext_modules=ext_modules,
     package_dir={'': 'seal'},
-    pytest='tests'
 )
