@@ -32,7 +32,7 @@ PY_INCLUDE = join(sys.prefix, "include/site/python%d.%d" % sys.version_info[:2])
 ext_modules = [
     Extension(
         '_primitives',
-        ['seal/wrapper.cpp'],
+        ['seal/cpp/wrapper.cpp'],
         include_dirs=['/usr/include/python3', PY_INCLUDE, os.path.join(PYBIND11_ROOT, 'include')] +
                      [join(SEAL_ROOT, 'SEAL') if SEAL_ROOT else ''],
         language='c++',

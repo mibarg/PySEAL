@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "seal/base64.h"
+#include "base64.h"
 #include "seal/bigpoly.h"
 #include "seal/bigpolyarray.h"
 #include "seal/biguint.h"
