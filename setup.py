@@ -1,13 +1,18 @@
 import os
+from os.path import join, dirname, basename
+import sys
 from distutils.core import setup, Extension
 from distutils import sysconfig
 
 # Locate SEAL
-if "SEAL" not in os.environ:
-    raise ImportError("Couldn't find SEAL in environment variables. "
-                      "Please install Microsoft SEAL (https://github.com/microsoft/SEAL) "
-                      "and point environment variable SEAL to its root.")
-SEAL_ROOT = os.environ["SEAL"]
+if os.path.exists("/usr/local/lib/libseal.a") and os.path.exists("/usr/local/include/seal/"):
+    SEAL_ROOT = None
+else:
+    if "SEAL" not in os.environ:
+        raise ImportError("Couldn't find SEAL in /usr/local/ or environment variables. "
+                          "Please install Microsoft SEAL (https://github.com/microsoft/SEAL) "
+                          "and point environment variable SEAL to its root.")
+    SEAL_ROOT = os.environ["SEAL"]
 
 # Locate pybind11
 if "PYBIND11" not in os.environ:
