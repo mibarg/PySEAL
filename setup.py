@@ -27,7 +27,7 @@ for key, value in cfg_vars.items():
     if type(value) == str:
         cfg_vars[key] = value.replace('-Wstrict-prototypes', '')
 
-PY_INCLUDE = join(dirname(dirname(sys.executable)), "include/site/", basename(sys.executable))
+PY_INCLUDE = join(sys.prefix, "include/site/python%d.%d" % sys.version_info[:2])
 
 ext_modules = [
     Extension(
