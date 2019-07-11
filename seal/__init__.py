@@ -1,1 +1,1 @@
-from seal import _primitives
+import seal._primitives
