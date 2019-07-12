@@ -25,3 +25,11 @@ def test_encode_decode(plain, base, plain_mod):
     encoded, encoder = Encoder.from_plain(plain, plain_mod, base)
 
     assert plain == encoder.decode(encoded)
+
+
+@pytest.mark.parametrize("encoding_type, plain_mod, base", product([IntegerEncoder], [256, 293], [2, 3]))
+def test_eq(encoding_type, base, plain_mod):
+    encoder1 = Encoder(encoding_type, plain_mod, base)
+    encoder2 = Encoder(encoding_type, plain_mod, base)
+
+    assert encoder1 == encoder2
