@@ -1,4 +1,5 @@
 import pytest
+from itertools import product
 
 from seal._primitives import IntegerEncoder, FractionalEncoder
 from seal.models import Encoder
@@ -11,15 +12,7 @@ def test_encoding_type(plain, encoding_type):
     assert encoding_type == Encoder.encoding_type(plain)
 
 
-_PARAMS_DESC = "plain, base, plain_mod"
-# 256 is a power of two, 293 is prime
-_PARAMS = [(1, 2, 256), (0, 2, 256), (-1, 2, 256),
-           (1, 3, 256), (0, 3, 256), (-1, 3, 256),
-           (1, 2, 293), (0, 2, 293), (-1, 2, 293),
-           (1, 3, 293), (0, 3, 293), (-1, 3, 293)]
-
-
-@pytest.mark.parametrize(_PARAMS_DESC, _PARAMS)
+@pytest.mark.parametrize("plain, base, plain_mod", product([1, 0, -1], [2, 3], [256, 293]))
 def test_implicit_explicit_init(plain, base, plain_mod):
     encoder1 = Encoder(Encoder.encoding_type(plain), plain_mod, base)
     _, encoder2 = Encoder.from_plain(plain, plain_mod, base)
@@ -27,7 +20,7 @@ def test_implicit_explicit_init(plain, base, plain_mod):
     assert encoder1 == encoder2
 
 
-@pytest.mark.parametrize(_PARAMS_DESC, _PARAMS)
+@pytest.mark.parametrize("plain, base, plain_mod", product([1, 0, -1], [2, 3], [256, 293]))
 def test_encode_decode(plain, base, plain_mod):
     encoded, encoder = Encoder.from_plain(plain, plain_mod, base)
 
