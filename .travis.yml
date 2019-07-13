@@ -1,0 +1,16 @@
+language: python
+services:
+  - docker
+python:
+    - "3.5"
+    - "3.6"
+    - "3.7"
+before_install:
+    - deployment/docker.sh test-container build
+install:
+    - pip install -r requirements.txt
+script:
+    - deployment/docker.sh test-container test
+branches:
+  only:
+   - master
