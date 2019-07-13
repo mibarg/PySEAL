@@ -2,9 +2,10 @@ language: python
 services:
   - docker
 python:
+    - "3.4"
     - "3.5"
     - "3.6"
-    - "3.7"
+    - "3.7-dev"
 before_install:
     - deployment/docker.sh test-container build
 install:
