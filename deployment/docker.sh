@@ -7,7 +7,7 @@ if [[ "$#" -ne 2 ]]; then
     exit 1
 fi
 if [[ $2 = "build" ]]; then
-   docker build -t $1 -f deployment/Dockerfile .
+   docker build -t $1 -f deployment/Dockerfile . | grep "^Step" | while read line ; do echo "[$(date "+%H:%M:%S")] | $line"; done;
    docker run -it $1 python3 -m pytest PySeal/tests/
 elif [[ $2 = "run" ]]; then
    docker run -it $1 python3
