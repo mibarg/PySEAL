@@ -1,0 +1,1 @@
+[![Build Status](https://travis-ci.com/mibarg/sealed.svg?token=YtpyWjLrpzZ5G11Nfbjk&branch=master)](https://travis-ci.com/mibarg/sealed)
