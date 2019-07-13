@@ -35,7 +35,7 @@ RUN git checkout a303c6fc479662fd53eaa8990dbc65b7de9b7deb
 ENV PYBIND11 /SEAL/pybind11
 
 # Install PySeal
-COPY /seal /SEAL/PySeal/seal
+COPY /sealed /SEAL/PySeal/sealed
 COPY /tests /SEAL/PySeal/tests
 COPY /requirements.txt /SEAL/PySeal/requirements.txt
 COPY /setup.py /SEAL/PySeal/setup.py

@@ -1,8 +1,8 @@
 import pytest
 from itertools import product
 
-from seal._primitives import IntegerEncoder, FractionalEncoder
-from seal.models import Encoder
+from sealed._primitives import IntegerEncoder, FractionalEncoder
+from sealed.models import Encoder
 
 
 @pytest.mark.parametrize("plain, encoding_type",

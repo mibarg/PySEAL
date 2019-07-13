@@ -1,7 +1,7 @@
 from typing import Union, Tuple, Type
 import logging
 
-from seal._primitives import *
+from sealed._primitives import *
 
 
 class Encoder:

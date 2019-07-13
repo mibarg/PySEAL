@@ -32,7 +32,7 @@ PY_INCLUDE = join(sys.prefix, "include/site/python%d.%d" % sys.version_info[:2])
 ext_modules = [
     Extension(
         '_primitives',
-        ['seal/cpp/wrapper.cpp'],
+        ['sealed/cpp/wrapper.cpp'],
         include_dirs=['/usr/include/python3', PY_INCLUDE, os.path.join(PYBIND11_ROOT, 'include')] +
                      [join(SEAL_ROOT, 'SEAL') if SEAL_ROOT else ''],
         language='c++',
@@ -42,11 +42,11 @@ ext_modules = [
 ]
 
 setup(
-    name='seal',
+    name='sealed',
     version='2.3',
     author='Todd Stavish, Shashwat Kishore',
     author_email='toddstavish@gmail.com',
     description='Python wrapper for SEAL',
     ext_modules=ext_modules,
-    package_dir={'': 'seal'},
+    package_dir={'': 'sealed'},
 )
