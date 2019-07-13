@@ -2,8 +2,8 @@ import time
 import random
 import pickle
 import threading
-import seal
-from seal import ChooserEvaluator, \
+import sealed
+from sealed import ChooserEvaluator, \
 	Ciphertext, \
 	Decryptor, \
 	Encryptor, \
@@ -129,7 +129,7 @@ def example_basics_i():
 	# In this example we use the default coefficient modulus for a 128-bit security
 	# level. Concretely, this coefficient modulus consists of only one 56-bit prime
 	# factor: 0xfffffffff00001.
-	parms.set_coeff_modulus(seal.coeff_modulus_128(2048))
+	parms.set_coeff_modulus(sealed.coeff_modulus_128(2048))
 
 	# The plaintext modulus can be any positive integer, even though here we take
 	# it to be a power of two. In fact, in many cases one might instead want it to
@@ -336,7 +336,7 @@ def example_basics_ii():
 	#     0x3fffffffd60001.
 
 	# The total size is 219 bits.
-	parms.set_coeff_modulus(seal.coeff_modulus_128(8192))
+	parms.set_coeff_modulus(sealed.coeff_modulus_128(8192))
 	parms.set_plain_modulus(1 << 10)
 
 	context = SEALContext(parms)
@@ -484,7 +484,7 @@ def example_basics_ii():
 	# measuring the time here, but relinearization with these evaluation keys
 	# is significantly faster than with ev_keys16.
 	ev_keys60 = EvaluationKeys()
-	keygen.generate_evaluation_keys(seal.dbc_max(), ev_keys60)
+	keygen.generate_evaluation_keys(sealed.dbc_max(), ev_keys60)
 
 	print("")
 	print("Encrypting " + plain1.to_string() + ": ")
@@ -565,7 +565,7 @@ def example_pickle():
 	# In this example we demonstrate how to serialize SEAL Ciphertexts to files using Pickle.
 	parms = EncryptionParameters()
 	parms.set_poly_modulus("1x^2048 + 1")
-	parms.set_coeff_modulus(seal.coeff_modulus_128(2048))
+	parms.set_coeff_modulus(sealed.coeff_modulus_128(2048))
 	parms.set_plain_modulus(1 << 8)
 
 	context = SEALContext(parms)
@@ -612,7 +612,7 @@ def example_weighted_average():
 	# only two, it suffices to use a small poly_modulus.
 	parms = EncryptionParameters()
 	parms.set_poly_modulus("1x^2048 + 1")
-	parms.set_coeff_modulus(seal.coeff_modulus_128(2048))
+	parms.set_coeff_modulus(sealed.coeff_modulus_128(2048))
 	parms.set_plain_modulus(1 << 8)
 
 	context = SEALContext(parms)
@@ -727,7 +727,7 @@ def example_batching():
 	parms = EncryptionParameters()
 
 	parms.set_poly_modulus("1x^4096 + 1")
-	parms.set_coeff_modulus(seal.coeff_modulus_128(4096))
+	parms.set_coeff_modulus(sealed.coeff_modulus_128(4096))
 
 	# Note that 40961 is a prime number and 2*4096 divides 40960.
 	parms.set_plain_modulus(40961)
@@ -1052,7 +1052,7 @@ def example_performance_st():
 
 		# Set up keys. For both relinearization and rotations we use a large
 		# decomposition bit count for best possible computational performance.
-		dbc = seal.dbc_max()
+		dbc = sealed.dbc_max()
 		print("Generating secret/public keys: ")
 		keygen = KeyGenerator(context)
 		print("Done")
@@ -1271,14 +1271,14 @@ def example_performance_st():
 
 	parms = EncryptionParameters()
 	parms.set_poly_modulus("1x^4096 + 1")
-	parms.set_coeff_modulus(seal.coeff_modulus_128(4096))
+	parms.set_coeff_modulus(sealed.coeff_modulus_128(4096))
 	parms.set_plain_modulus(786433)
 	context = SEALContext(parms)
 	performance_test_st(context)
 
 	print("")
 	parms.set_poly_modulus("1x^8192 + 1")
-	parms.set_coeff_modulus(seal.coeff_modulus_128(8192))
+	parms.set_coeff_modulus(sealed.coeff_modulus_128(8192))
 	parms.set_plain_modulus(786433)
 	context = SEALContext(parms)
 	performance_test_st(context)
@@ -1319,7 +1319,7 @@ def example_performance_mt(th_count):
 	# After these classes are constructed, they are thread-safe to use.
 	parms = EncryptionParameters()
 	parms.set_poly_modulus("1x^8192 + 1")
-	parms.set_coeff_modulus(seal.coeff_modulus_128(8192))
+	parms.set_coeff_modulus(sealed.coeff_modulus_128(8192))
 	parms.set_plain_modulus(786433)
 
 	context = SEALContext(parms)
@@ -1329,7 +1329,7 @@ def example_performance_mt(th_count):
 	coeff_modulus = context.total_coeff_modulus()
 	plain_modulus = context.plain_modulus()
 
-	dbc = seal.dbc_max()
+	dbc = sealed.dbc_max()
 	print("Generating secret/public keys: ")
 	keygen = KeyGenerator(context)
 	print("Done")
@@ -1590,7 +1590,7 @@ def save_example():
 
     print_example_banner("Example: Basics I");
 
-   
+
     parms = EncryptionParameters()
 
     # We first set the polynomial modulus. This must be a power-of-2 cyclotomic
@@ -1603,8 +1603,8 @@ def save_example():
     # computation in this example, it suffices to use a very small polynomial modulus
     parms.set_poly_modulus("1x^2048 + 1")
 
-   
-    parms.set_coeff_modulus(seal.coeff_modulus_128(2048))
+
+    parms.set_coeff_modulus(sealed.coeff_modulus_128(2048))
 
     # The plaintext modulus can be any positive integer, even though here we take
     # it to be a power of two. In fact, in many cases one might instead want it to
@@ -1630,7 +1630,7 @@ def save_example():
     # Print the parameters that we have chosen
     print_parameters(context);
 
- 
+
     encoder = IntegerEncoder(context.plain_modulus())
 
     # We are now ready to generate the secret and public keys. For this purpose we need

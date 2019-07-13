@@ -1,8 +1,8 @@
 from typing import Union, Tuple, Type
 import logging
 
-from seal._primitives import *
-from seal.utils import is_pow_of_two
+from sealed._primitives import *
+from sealed.utils import is_pow_of_two
 
 
 class Encoder:
