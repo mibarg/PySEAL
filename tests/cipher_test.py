@@ -57,9 +57,9 @@ def test_mult_noise_budget(coeff_mod, plain_mod, expected_noise,
     assert abs(cs.noise_budget(sk, cipher_1) - (2 * cs.noise_budget(sk, cipher_2))) <= 3
 
 
-@pytest.mark.parametrize("coeff_mod, plain_mod, expected_noise", ((0, 256, 817), (0, 293, 37)))
+@pytest.mark.parametrize("coeff_mod, plain_mod, expected_noise", ((0, 256, 52), (0, 293, 48)))
 def test_pow_noise_budget(coeff_mod, plain_mod, expected_noise,
-                          poly_mod=32768, security=128, plain=1, base=2, power=3):
+                          poly_mod=4096, security=128, plain=1, base=2, power=3):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
