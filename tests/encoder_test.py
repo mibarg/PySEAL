@@ -6,14 +6,16 @@ from sealed.models import Encoder
 
 
 @pytest.mark.parametrize("plain, encoding_type",
-                         [(1, IntegerEncoder), (0, IntegerEncoder), (1.0, FractionalEncoder), (0.0, FractionalEncoder)])
+                         [(1, IntegerEncoder), (0, IntegerEncoder),
+                          (1.0, FractionalEncoder), (0.0, FractionalEncoder),
+                          (int, IntegerEncoder), (float, FractionalEncoder)])
 def test_encoding_type(plain, encoding_type):
-    assert encoding_type == Encoder.encoding_type(plain)
+    assert encoding_type == Encoder._encoding_type(plain)
 
 
 @pytest.mark.parametrize("plain, base, plain_mod", product([1, 0], [2, 3], [256, 293]))
 def test_implicit_explicit_init(plain, base, plain_mod):
-    encoder1 = Encoder(Encoder.encoding_type(plain), plain_mod, base)
+    encoder1 = Encoder(plain, plain_mod, base)
     _, encoder2 = Encoder.from_plain(plain, plain_mod, base)
 
     assert encoder1 == encoder2

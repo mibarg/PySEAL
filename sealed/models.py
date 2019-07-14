@@ -8,46 +8,59 @@ from sealed.utils import is_pow_of_two, get_plain_mod
 
 class Encoder:
     # TODO support matrices (PolyCRTBuilder), float (FractionalEncoder)
-    _TYPE_MAP = {int: IntegerEncoder, float: FractionalEncoder}
-    _PLAIN_TYPES = Union[int, float]
-    _ENCODER_TYPES = Union[Type[IntegerEncoder], Type[FractionalEncoder]]
+    _TYPE = {int: IntegerEncoder, float: FractionalEncoder}
 
-    def __init__(self, encoder_type: _ENCODER_TYPES, plain_mod: int, base: int):
-        self._encoder_type = encoder_type
+    def __init__(self,
+                 typ: Union[int, float, Type[int], Type[float], Type[IntegerEncoder], Type[FractionalEncoder]],
+                 plain_mod: Union[SmallModulus, int],
+                 base: int):
+
+        # accept encoder_type as _ENCODER_TYPES, _PLAIN_TYPES or _PLAIN
+        if typ in Encoder._TYPE or type(typ) in Encoder._TYPE:
+            typ = self._encoding_type(typ)
+
+        # accept plain_mod as int or SmallModulus
+        if isinstance(plain_mod, int):
+            plain_mod = SmallModulus(plain_mod)
+
+        self._encoder_type = typ
         self._plain_mod = plain_mod
         self._base = base
+
         # noinspection PyCallingNonCallable
-        self._encoder = encoder_type(SmallModulus(plain_mod), base)
+        self._encoder = typ(plain_mod, base)
 
     def __eq__(self, other) -> bool:
         if (isinstance(other, Encoder)
                 and self._encoder_type.__class__ == other._encoder_type.__class__
-                and self._plain_mod == other._plain_mod
+                and self._plain_mod.value() == other._plain_mod.value()
                 and self._base == other._base):
             return True
         else:
             return False
 
     @staticmethod
-    def encoding_type(plain: Union[int, float, Type[int], Type[float]]) -> _ENCODER_TYPES:
+    def _encoding_type(plain: Union[int, float, Type[int], Type[float]]
+                       ) -> Union[Type[IntegerEncoder], Type[FractionalEncoder]]:
         logging.debug("encoding_type(plain={},type(plain)={})".format(plain, type(plain)))
-        for typ in Encoder._TYPE_MAP:
+        for typ in Encoder._TYPE:
             if isinstance(plain, typ) or plain == typ:
-                return Encoder._TYPE_MAP[typ]
+                return Encoder._TYPE[typ]
         return NotImplemented
 
     @staticmethod
-    def from_plain(plain: _PLAIN_TYPES, plain_mod: int, base: int) -> Tuple[Plaintext, "Encoder"]:
-        typ = Encoder.encoding_type(plain)
-        encoder = Encoder(typ, plain_mod, base)
+    def from_plain(plain: Union[int, float, Type[int], Type[float]],
+                   plain_mod: Union[SmallModulus, int],
+                   base: int) -> Tuple[Plaintext, "Encoder"]:
+        encoder = Encoder(plain, plain_mod, base)
         encoded = encoder.encode(plain)
         return encoded, encoder
 
-    def encode(self, plain: _PLAIN_TYPES) -> Plaintext:
+    def encode(self, plain: Union[int, float]) -> Plaintext:
         # TODO force non-negative?
         return self._encoder.encode(plain)
 
-    def decode(self, encoded: Plaintext) -> _PLAIN_TYPES:
+    def decode(self, encoded: Plaintext) -> Union[int, float]:
         logging.debug("decode(encoded={},self._encoder_type={})".format(encoded, self._encoder_type))
         if self._encoder_type == IntegerEncoder:
             # TODO non int 32
@@ -74,8 +87,8 @@ class CipherText:
 
     def _gen_encoder(self):
         return Encoder(
-            Encoder.encoding_type(self._plain_type),
-            get_plain_mod(self._context),
+            self._plain_type,
+            self._context.plain_modulus(),
             self._encoder_base)
 
     def __add__(self, other):
@@ -188,7 +201,7 @@ class CipherScheme:
 
     def encrypt(self, pk: PublicKey, plain: Union[int, float], base: int):
         # TODO force non-negative?
-        encoded, encoder = Encoder.from_plain(plain, get_plain_mod(self._context), base)
+        encoded, encoder = Encoder.from_plain(plain, self._context.plain_modulus(), base)
 
         cipher = Ciphertext()
         Encryptor(self._context, pk).encrypt(encoded, cipher)
