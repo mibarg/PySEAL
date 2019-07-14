@@ -88,6 +88,9 @@ class CipherText:
         else:
             return NotImplemented
 
+    def size(self):
+        return self._cipher.size()
+
 
 class CipherScheme:
     def __init__(self,

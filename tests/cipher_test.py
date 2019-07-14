@@ -3,6 +3,18 @@ import pytest
 from sealed.models import CipherScheme
 
 
+@pytest.mark.parametrize("coeff_mod, plain_mod",
+                         ((0, 256), (0, 293), (0x7fffffffba0001, 256), (0x7fffffffba0001, 293)))
+def test_fresh_size(coeff_mod, plain_mod,
+                    poly_mod=2048, security=128, plain=1, base=2):
+    cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
+    pk, sk = cs.generate_keys()
+
+    cipher = cs.encrypt(pk, plain, base)
+
+    assert cipher.size() == 2
+
+
 @pytest.mark.parametrize("coeff_mod, plain_mod, expected_noise",
                          ((0, 256, 38), (0, 293, 37), (0x7fffffffba0001, 256, 36), (0x7fffffffba0001, 293, 36)))
 def test_add_noise_budget(coeff_mod, plain_mod, expected_noise,
