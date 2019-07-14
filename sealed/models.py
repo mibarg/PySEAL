@@ -44,6 +44,7 @@ class Encoder:
         return encoded, encoder
 
     def encode(self, plain: _PLAIN_TYPES) -> Plaintext:
+        # TODO force non-negative?
         return self._encoder.encode(plain)
 
     def decode(self, encoded: Plaintext) -> _PLAIN_TYPES:
@@ -127,6 +128,7 @@ class CipherScheme:
         return pk, sk
 
     def encrypt(self, pk: PublicKey, plain: Union[int, float], base: int):
+        # TODO force non-negative?
         encoded, encoder = Encoder.from_plain(plain, self._context.poly_modulus().coeff_count() - 1, base)
 
         cipher = Ciphertext()
