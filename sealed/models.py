@@ -243,3 +243,13 @@ class CipherScheme:
             return True
         else:
             return False
+
+    def __getstate__(self):
+        return self._context
+
+    def __setstate__(self, state):
+        self._context = state
+
+        # non-pickelizable properties
+        self._keygen = KeyGenerator(self._context)
+        self._evl = Evaluator(self._context)
