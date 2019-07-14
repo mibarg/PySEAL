@@ -35,4 +35,12 @@ def test_fresh_noise_budget(coeff_mod, plain_mod, expected_noise,
 
     cipher = cs.encrypt(pk, plain, base)
     # Noise budget in bits ~ log2(coeff_modulus/plain_modulus)
-    assert expected_noise == cs.noise_budget(sk, cipher)
+    assert abs(expected_noise - cs.noise_budget(sk, cipher)) <= 1
+
+
+@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security, plain, base", product([2**11, 2**12, 2**13, 2**14], [0, 0x7fffffffba0001, 0x7fffffffaa0001], [256, 293], [128, 192], [1, 0], [2, 3]))
+def test_enc_dec(poly_mod, coeff_mod, plain_mod, security, plain, base):
+    cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
+    pk, sk = cs.generate_keys()
+
+    assert plain == cs.decrypt(sk, cs.encrypt(pk, plain, base))
