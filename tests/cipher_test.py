@@ -54,7 +54,7 @@ def test_mult_noise_budget(coeff_mod, plain_mod, expected_noise,
     cipher_2 = cipher_1 * cipher_1
 
     # Multiplication consumes ~ half the noise budget
-    assert abs(cs.noise_budget(sk, cipher_1) - (2 * cs.noise_budget(sk, cipher_2))) <= 2
+    assert abs(cs.noise_budget(sk, cipher_1) - (2 * cs.noise_budget(sk, cipher_2))) <= 3
 
 
 @pytest.mark.parametrize("plain, expected", ((0, 0), (1, 2), (-1, 256-2), (3, 6)))
