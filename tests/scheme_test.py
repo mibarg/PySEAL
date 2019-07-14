@@ -55,6 +55,6 @@ def test_relinearize(dbc, expected_noise,
     pk, sk = cs.generate_keys()
 
     cipher_1 = cs.encrypt(pk, plain, base)
-    cipher_2 = cipher_1 * cipher_1
+    cipher_2 = cs.relinearize(cipher_1 * cipher_1, dbc)
 
-    assert abs(expected_noise - cs.noise_budget(sk, cipher_2)) <= 1
+    assert abs(expected_noise - cs.noise_budget(sk, cipher_2)) <= 2

@@ -88,6 +88,22 @@ class CipherText:
         else:
             return NotImplemented
 
+    def __pow__(self, power):
+        if isinstance(power, int) and power >= 1:
+
+            if power == 1:
+                return self
+
+            if power % 2 == 0:
+                return self._square() ** (power // 2)
+            else:
+                return self * (self._square() ** ((power - 1) // 2))
+        else:
+            return NotImplemented
+
+    def _square(self):
+        return self * self
+
     def size(self):
         return self._cipher.size()
 
@@ -124,7 +140,7 @@ class CipherScheme:
             self._keygen = KeyGenerator(self._context)
             self._evl = Evaluator(self._context)
         except AssertionError as e:
-            raise ValueError("Illegal parameters, {}".format(e))
+            raise ValueError("Illegal parameters, %s" % e)
 
     def generate_keys(self):
         pk = self._keygen.public_key()

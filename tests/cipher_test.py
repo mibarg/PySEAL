@@ -57,6 +57,18 @@ def test_mult_noise_budget(coeff_mod, plain_mod, expected_noise,
     assert abs(cs.noise_budget(sk, cipher_1) - (2 * cs.noise_budget(sk, cipher_2))) <= 3
 
 
+@pytest.mark.parametrize("coeff_mod, plain_mod, expected_noise", ((0, 256, 817), (0, 293, 37)))
+def test_pow_noise_budget(coeff_mod, plain_mod, expected_noise,
+                          poly_mod=32768, security=128, plain=1, base=2, power=3):
+    cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
+    pk, sk = cs.generate_keys()
+
+    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_2 = cipher_1 ** power
+
+    assert abs(expected_noise - cs.noise_budget(sk, cipher_2)) <= 1
+
+
 @pytest.mark.parametrize("plain, expected", ((0, 0), (1, 2), (-1, 256-2), (3, 6)))
 def test_add_enc_dec(plain, expected,
                      poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
@@ -88,6 +100,18 @@ def test_mult_enc_dec(plain, expected,
 
     cipher_1 = cs.encrypt(pk, plain, base)
     cipher_2 = cipher_1 * cipher_1
+
+    assert expected == cs.decrypt(sk, cipher_2)
+
+
+@pytest.mark.parametrize("plain, power, expected", ((0, 1, 0), (0, 2, 0), (3, 1, 3), (3, 2, 9), (3, 3, 27), (3, 5, 243)))
+def test_pow_enc_dec(plain, power, expected,
+                     poly_mod=8192, coeff_mod=0, plain_mod=1024, security=128, base=2):
+    cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
+    pk, sk = cs.generate_keys()
+
+    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_2 = cipher_1 ** power
 
     assert expected == cs.decrypt(sk, cipher_2)
 
