@@ -512,5 +512,6 @@ PYBIND11_MODULE(_primitives, m) {
   m.def("coeff_modulus_192", &coeff_modulus_192, "Returns the default coefficients modulus for a given polynomial modulus degree.");
   m.def("coeff_modulus_128", &coeff_modulus_128, "Returns the default coefficients modulus for a given polynomial modulus degree.");
   m.def("dbc_max", &dbc_max, "Return dbc max value.");
+  m.def("dbc_min", &dbc_min, "Return dbc min value.");
 
 }

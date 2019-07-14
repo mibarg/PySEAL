@@ -45,3 +45,16 @@ def test_enc_dec(poly_mod, coeff_mod, plain_mod, security, plain, base):
     pk, sk = cs.generate_keys()
 
     assert plain == cs.decrypt(sk, cs.encrypt(pk, plain, base))
+
+
+@pytest.mark.parametrize("dbc, expected_noise",
+                         ((7, 175), (12, 175), (22, 175), (32, 166), (47, 151), (52, 146), (57, 142)))
+def test_relinearize(dbc, expected_noise,
+                     poly_mod=8192, coeff_mod=0, plain_mod=1024, security=128, plain=700, base=2):
+    cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
+    pk, sk = cs.generate_keys()
+
+    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_2 = cipher_1 * cipher_1
+
+    assert abs(expected_noise - cs.noise_budget(sk, cipher_2)) <= 1

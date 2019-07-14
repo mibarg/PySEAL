@@ -121,13 +121,14 @@ class CipherScheme:
             params.set_plain_modulus(plain_mod)
 
             self._context = SEALContext(params)
+            self._keygen = KeyGenerator(self._context)
+            self._evl = Evaluator(self._context)
         except AssertionError as e:
             raise ValueError("Illegal parameters, {}".format(e))
 
     def generate_keys(self):
-        key_gen = KeyGenerator(self._context)
-        pk = key_gen.public_key()
-        sk = key_gen.secret_key()
+        pk = self._keygen.public_key()
+        sk = self._keygen.secret_key()
         return pk, sk
 
     def encrypt(self, pk: PublicKey, plain: Union[int, float], base: int):
@@ -137,7 +138,7 @@ class CipherScheme:
         cipher = Ciphertext()
         Encryptor(self._context, pk).encrypt(encoded, cipher)
 
-        return CipherText(cipher, Evaluator(self._context), encoder)
+        return CipherText(cipher, self._evl, encoder)
 
     # noinspection PyProtectedMember
     def decrypt(self, sk: SecretKey, cipher: CipherText):
@@ -151,6 +152,28 @@ class CipherScheme:
     def noise_budget(self, sk: SecretKey, cipher: CipherText):
         dec = Decryptor(self._context, sk)
         return dec.invariant_noise_budget(cipher._cipher)
+
+    # noinspection PyProtectedMember
+    def relinearize(self, cipher: CipherText, dbc: int = 16) -> CipherText:
+        """
+        :param cipher: CipherText
+        :param dbc: decomposition bit count, any integer at least 1 [dbc_min()] and at most 60 [dbc_max()]
+            A large decomposition bit count makes relinearization fast, but consumes more noise budget.
+            A small decomposition bit count can make relinearization slower, but might not change the noise budget by any observable amount.
+        """
+
+        assert dbc_min() <= dbc <= dbc_max()
+
+        # M-2 evaluation keys to relinearize a ciphertext of size M >= 2 back to size 2
+        num_keys = max(cipher.size() - 2, 1)
+
+        ek = EvaluationKeys()
+        self._keygen.generate_evaluation_keys(dbc, num_keys, ek)
+
+        res = Ciphertext()
+        self._evl.relinearize(cipher._cipher, ek, res)
+
+        return CipherText(res, cipher._evl, cipher._encoder)
 
     def __str__(self) -> str:
         return "CipherScheme(poly_mod={}, coeff_mod_size={} bits, plain_mod={}, noise_std={})".format(
