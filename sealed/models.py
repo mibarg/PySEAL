@@ -1,6 +1,7 @@
 from typing import Union, Tuple, Type
 import logging
 
+# noinspection PyProtectedMember
 from sealed._primitives import *
 from sealed.utils import is_pow_of_two
 
@@ -108,6 +109,8 @@ class CipherScheme:
                 # Automatically choose by SEAL recommendations
                 coeff_mod_func = {128: coeff_modulus_128, 192: coeff_modulus_192}
                 params.set_coeff_modulus(coeff_mod_func[security](poly_mod))
+            else:
+                params.set_coeff_modulus([SmallModulus(coeff_mod)])
 
             # Plaintext modulus
             assert isinstance(plain_mod, int)
@@ -124,7 +127,7 @@ class CipherScheme:
         return pk, sk
 
     def encrypt(self, pk: PublicKey, plain: Union[int, float], base: int):
-        encoded, encoder = Encoder.from_plain(plain, self._context.poly_modulus(), base)
+        encoded, encoder = Encoder.from_plain(plain, self._context.poly_modulus().coeff_count() - 1, base)
 
         cipher = Ciphertext()
         Encryptor(self._context, pk).encrypt(encoded, cipher)
@@ -146,7 +149,7 @@ class CipherScheme:
 
     def __str__(self) -> str:
         return "CipherScheme(poly_mod={}, coeff_mod_size={} bits, plain_mod={}, noise_std={})".format(
-            self._context.poly_modulus(), self._context.total_coeff_modulus().significant_bit_count(),
+            self._context.poly_modulus().coeff_count(), self._context.total_coeff_modulus().significant_bit_count(),
             self._context.plain_modulus().value(), self._context.noise_standard_deviation())
 
     def __eq__(self, other) -> bool:
