@@ -9,8 +9,8 @@ fi
 if [[ $2 = "build" ]]; then
    docker build -t $1 -f deployment/Dockerfile .
 elif [[ $2 = "build-and-test" ]]; then
-   docker build -t $1 -f deployment/Dockerfile .
-   docker run -it $1 python3 -m pytest PySeal/tests/
+   ./$0 $1 build
+   ./$0 $1 test
 elif [[ $2 = "run" ]]; then
    docker run -it $1 python3
 elif [[ $2 = "test" ]]; then

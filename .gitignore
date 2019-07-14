@@ -106,6 +106,3 @@ venv.bak/
 
 # PyCharm
 .idea/
-
-# local cache
-notes.txt
