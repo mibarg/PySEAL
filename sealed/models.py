@@ -66,11 +66,17 @@ class CipherText:
         self._encoder_base = encoder_base
 
         # non-pickelizable properties
-        self._evl = evl if evl else Evaluator(context)
-        self._encoder = encoder if encoder else Encoder(
-            Encoder.encoding_type(plain_type),
+        self._evl = evl if evl else self._gen_evaluator()
+        self._encoder = encoder if encoder else self._gen_encoder()
+
+    def _gen_evaluator(self):
+        return Evaluator(self._context)
+
+    def _gen_encoder(self):
+        return Encoder(
+            Encoder.encoding_type(self._plain_type),
             get_plain_mod(self._context),
-            encoder_base)
+            self._encoder_base)
 
     def __add__(self, other):
         if isinstance(other, CipherText) and self._encoder == other._encoder:
@@ -115,15 +121,17 @@ class CipherText:
     def __copy__(self):
         return CipherText(self._cipher, self._context, self._plain_type, self._encoder_base, self._evl, self._encoder)
 
-    def __eq__(self, other):
-        if (isinstance(other, CipherText)
-                and self._cipher == other._cipher
-                and self._context == other._context
-                and self._plain_type == other._plain_type
-                and self._encoder_base == other._encoder_base):
-            return True
-        else:
-            return False
+    def __getstate__(self):
+        return self._cipher, self._context, self._plain_type, self._encoder_base
+
+    def __setstate__(self, state):
+        self._cipher, self._context, self._plain_type, self._encoder_base = state
+
+        # non-pickelizable properties
+        self._evl = self._gen_evaluator()
+        self._encoder = self._gen_encoder()
+
+        return True
 
     def init_new(self, cipher: Ciphertext):
         other = self.__copy__()
@@ -166,6 +174,8 @@ class CipherScheme:
             params.set_plain_modulus(plain_mod)
 
             self._context = SEALContext(params)
+
+            # non-pickelizable properties
             self._keygen = KeyGenerator(self._context)
             self._evl = Evaluator(self._context)
         except AssertionError as e:
