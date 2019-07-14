@@ -3,7 +3,7 @@ import logging
 
 # noinspection PyProtectedMember
 from sealed._primitives import *
-from sealed.utils import is_pow_of_two
+from sealed.utils import is_pow_of_two, get_plain_mod
 
 
 class Encoder:
@@ -29,10 +29,10 @@ class Encoder:
             return False
 
     @staticmethod
-    def encoding_type(plain: _PLAIN_TYPES) -> _ENCODER_TYPES:
+    def encoding_type(plain: Union[int, float, Type[int], Type[float]]) -> _ENCODER_TYPES:
         logging.debug("encoding_type(plain={},type(plain)={})".format(plain, type(plain)))
         for typ in Encoder._TYPE_MAP:
-            if isinstance(plain, typ):
+            if isinstance(plain, typ) or plain == typ:
                 return Encoder._TYPE_MAP[typ]
         return NotImplemented
 
@@ -56,23 +56,34 @@ class Encoder:
 
 
 class CipherText:
-    def __init__(self, cipher: Ciphertext, evl: Evaluator, encoder: Encoder):
+    def __init__(self, cipher: Ciphertext,
+                 context: SEALContext, plain_type: Union[Type[int], Type[float]], encoder_base: int,
+                 evl: Evaluator = None, encoder: Encoder = None):
         self._cipher = cipher
-        self._evl = evl
-        self._encoder = encoder
+
+        self._context = context
+        self._plain_type = plain_type
+        self._encoder_base = encoder_base
+
+        # non-pickelizable properties
+        self._evl = evl if evl else Evaluator(context)
+        self._encoder = encoder if encoder else Encoder(
+            Encoder.encoding_type(plain_type),
+            get_plain_mod(self._context),
+            encoder_base)
 
     def __add__(self, other):
         if isinstance(other, CipherText) and self._encoder == other._encoder:
             res = Ciphertext()
             self._evl.add(self._cipher, other._cipher, res)
-            return CipherText(res, self._evl, self._encoder)
+            return self.init_new(res)
         else:
             return NotImplemented
 
     def __neg__(self):
         res = Ciphertext()
         self._evl.negate(self._cipher, res)
-        return CipherText(res, self._evl, self._encoder)
+        return self.init_new(res)
 
     def __sub__(self, other):
         if isinstance(other, CipherText) and self._encoder == other._encoder:
@@ -84,7 +95,7 @@ class CipherText:
         if isinstance(other, CipherText) and self._encoder == other._encoder:
             res = Ciphertext()
             self._evl.multiply(self._cipher, other._cipher, res)
-            return CipherText(res, self._evl, self._encoder)
+            return self.init_new(res)
         else:
             return NotImplemented
 
@@ -100,6 +111,24 @@ class CipherText:
                 return self * (self._square() ** ((power - 1) // 2))
         else:
             return NotImplemented
+
+    def __copy__(self):
+        return CipherText(self._cipher, self._context, self._plain_type, self._encoder_base, self._evl, self._encoder)
+
+    def __eq__(self, other):
+        if (isinstance(other, CipherText)
+                and self._cipher == other._cipher
+                and self._context == other._context
+                and self._plain_type == other._plain_type
+                and self._encoder_base == other._encoder_base):
+            return True
+        else:
+            return False
+
+    def init_new(self, cipher: Ciphertext):
+        other = self.__copy__()
+        other._cipher = cipher
+        return other
 
     def _square(self):
         return self * self
@@ -149,12 +178,12 @@ class CipherScheme:
 
     def encrypt(self, pk: PublicKey, plain: Union[int, float], base: int):
         # TODO force non-negative?
-        encoded, encoder = Encoder.from_plain(plain, self._context.poly_modulus().coeff_count() - 1, base)
+        encoded, encoder = Encoder.from_plain(plain, get_plain_mod(self._context), base)
 
         cipher = Ciphertext()
         Encryptor(self._context, pk).encrypt(encoded, cipher)
 
-        return CipherText(cipher, self._evl, encoder)
+        return CipherText(cipher, self._context, type(plain), base, self._evl, encoder)
 
     # noinspection PyProtectedMember
     def decrypt(self, sk: SecretKey, cipher: CipherText):
@@ -189,7 +218,7 @@ class CipherScheme:
         res = Ciphertext()
         self._evl.relinearize(cipher._cipher, ek, res)
 
-        return CipherText(res, cipher._evl, cipher._encoder)
+        return cipher.init_new(res)
 
     def __str__(self) -> str:
         return "CipherScheme(poly_mod={}, coeff_mod_size={} bits, plain_mod={}, noise_std={})".format(
