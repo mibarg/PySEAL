@@ -66,7 +66,7 @@ def test_pow_noise_budget(coeff_mod, plain_mod, expected_noise,
     cipher_1 = cs.encrypt(pk, plain, base)
     cipher_2 = cipher_1 ** power
 
-    assert abs(expected_noise - cs.noise_budget(sk, cipher_2)) <= 5
+    assert abs(expected_noise - cs.noise_budget(sk, cipher_2)) <= 7
 
 
 @pytest.mark.parametrize("plain, expected", ((0, 0), (1, 2), (3, 6)))
