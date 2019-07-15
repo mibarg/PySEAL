@@ -1,17 +1,54 @@
 language: python
-services:
-  - docker
 python:
-    - "3.4"
-    - "3.5"
-    - "3.6"
-    - "3.7-dev"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7-dev"
+cache:
+  - pip
+  - ccache
+  - directories:
+    - include
 before_install:
-    - deployment/docker.sh test-container build
+  # Variables
+  - export ROOT=${PWD}
+  # Prerequisites
+  - sudo apt-get -qqy update
+  - sudo apt-get install -qqy g++ make sudo libdpkg-perl --no-install-recommends
+  # Build SEAL libraries
+  - if [ ! -d "${ROOT}/include/SEAL/bin" ]; then
+      cd ${ROOT}/include/SEAL;
+      chmod +x configure;
+      sed -i -e 's/\r$//' configure;
+      ./configure;
+      make;
+    else
+      echo "Found cached SEAL";
+    fi
+  - export LD_LIBRARY_PATH=${ROOT}/include/SEAL/bin:${LD_LIBRARY_PATH}
+  - export SEAL=${ROOT}/include
+  # Install PyBind11
+  - if [ ! -d "${ROOT}/include/pybind11" ]; then
+      cd ${ROOT}/include/;
+      git clone https://github.com/pybind/pybind11.git;
+      cd ${ROOT}/include/pybind11;
+      git checkout a303c6fc479662fd53eaa8990dbc65b7de9b7deb;
+    else
+    echo "Found cached PyBind11";
+    fi
+  - export PYBIND11=${ROOT}/include/pybind11
 install:
-    - pip install -r requirements.txt
+  # Install Python dependencies
+  - cd ${ROOT}
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
 script:
-    - deployment/docker.sh test-container test
+  # Install sealed
+  - cd ${ROOT}
+  - python setup.py build_ext -i
+  - export PYTHONPATH=${PYTHONPATH}:${ROOT}:${SEAL}/bin
+  # Run tests
+  - python -m pytest tests/
 branches:
   only:
    - master

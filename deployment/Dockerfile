@@ -18,7 +18,7 @@ RUN apt-get -qqy update && apt-get install -qqy \
 
 # Build SEAL libraries
 RUN mkdir -p SEAL/
-COPY /dependencies/SEAL /SEAL/SEAL/
+COPY /include /SEAL/SEAL/
 WORKDIR /SEAL/SEAL/
 RUN chmod +x configure
 RUN sed -i -e 's/\r$//' configure
