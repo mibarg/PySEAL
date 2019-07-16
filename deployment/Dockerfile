@@ -27,6 +27,9 @@ RUN make
 ENV LD_LIBRARY_PATH SEAL/bin:$LD_LIBRARY_PATH
 ENV SEAL /SEAL
 
+# Delete SEAL log if exists, to enable caching of SEAL binaries
+RUN rm -f /SEAL/SEAL/config.log;
+
 # Install PyBind11
 WORKDIR /SEAL/
 RUN git clone https://github.com/pybind/pybind11.git
