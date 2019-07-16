@@ -128,7 +128,6 @@ class CipherScheme:
         return pk, sk
 
     def encrypt(self, pk: PublicKey, plain: Union[int, float], **kwargs):
-        # TODO force non-negative?
         encoded, encoder = Encoder(plain, self._context, **kwargs)
 
         cipher = Ciphertext()
