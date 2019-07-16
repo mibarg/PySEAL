@@ -31,6 +31,9 @@ def test_cipher_pickle(plain, base=2):
 
     assert cs.decrypt(sk, e_2) == plain
 
+    # noinspection PyProtectedMember
+    assert e_1._encoder == e_1._encoder
+
 
 # noinspection PyProtectedMember
 @pytest.mark.parametrize("plain", (7, 7.21))
