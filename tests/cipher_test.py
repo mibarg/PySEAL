@@ -119,20 +119,21 @@ def test_pow_enc_dec(plain, power, expected,
     assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
 
 
-@pytest.mark.parametrize("plain_1, base_1, plain_2, base_2", ((1, 2, 1, 3),))
-def test_type_inconsistency(plain_1, base_1, plain_2, base_2,
+@pytest.mark.parametrize("plain_1, kwargs_1, plain_2, kwargs_2",
+                         ((1, {"base": 2}, 1, {"base": 3}), (1, {"unsigned": True}, 1, {"unsigned": False}),
+                          (1.0, {"base": 2}, 1, {"base": 2}), (1.0, {"base": 2}, 1.0, {"base": 3}),
+                          (1.0, {"integral": 0.1}, 1.0, {"integral": 0.2}),
+                          (1.0, {"fractional": 0.1}, 1.0, {"fractional": 0.2})))
+def test_type_inconsistency(plain_1, kwargs_1, plain_2, kwargs_2,
                             poly_mod=2048, coeff_mod=0, plain_mod=256, security=128):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    # int in different base
-    cipher_1 = cs.encrypt(pk, plain_1, base=base_1)
-    cipher_2 = cs.encrypt(pk, plain_2, base=base_2)
+    cipher_1 = cs.encrypt(pk, plain_1, **kwargs_1)
+    cipher_2 = cs.encrypt(pk, plain_2, **kwargs_2)
     with pytest.raises(TypeError):
         _ = cipher_1 + cipher_2
     with pytest.raises(TypeError):
         _ = cipher_1 - cipher_2
     with pytest.raises(TypeError):
         _ = cipher_1 * cipher_2
-
-    # TODO float
