@@ -37,15 +37,18 @@ WORKDIR /SEAL/pybind11
 RUN git checkout a303c6fc479662fd53eaa8990dbc65b7de9b7deb
 ENV PYBIND11 /SEAL/pybind11
 
-# Install PySeal
-COPY /sealed /SEAL/PySeal/sealed
-COPY /tests /SEAL/PySeal/tests
+# Install dependencies
 COPY /requirements.txt /SEAL/PySeal/requirements.txt
-COPY /setup.py /SEAL/PySeal/setup.py
 WORKDIR /SEAL/PySeal
 RUN pip3 install --upgrade pip
 RUN pip3 install setuptools
 RUN pip3 install -r requirements.txt
+
+# Install PySeal
+COPY /sealed /SEAL/PySeal/sealed
+COPY /tests /SEAL/PySeal/tests
+COPY /setup.py /SEAL/PySeal/setup.py
+WORKDIR /SEAL/PySeal
 RUN python3 setup.py build_ext -i
 ENV PYTHONPATH $PYTHONPATH:/SEAL/PySeal:$SEAL/bin
 
