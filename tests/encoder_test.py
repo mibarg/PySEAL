@@ -30,7 +30,7 @@ def test_encode_decode(plain, base, plain_mod):
 @pytest.mark.parametrize("encoder_type, plain_mod, base", product([float, int], [256, 293], [2, 3]))
 def test_eq(encoder_type, base, plain_mod):
     cs = CipherScheme()
-    encoder1 = Encoder(encoder_type, cs._context, base=base)
-    encoder2 = Encoder(encoder_type, cs._context, base=base)
+    _, encoder1 = Encoder(encoder_type, cs._context, base=base)
+    _, encoder2 = Encoder(encoder_type, cs._context, base=base)
 
     assert encoder1 == encoder2
