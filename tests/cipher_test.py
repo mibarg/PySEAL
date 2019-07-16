@@ -78,7 +78,7 @@ def test_add_enc_dec(plain, expected,
     cipher_1 = cs.encrypt(pk, plain, base)
     cipher_2 = cipher_1 + cipher_1
 
-    assert expected == cs.decrypt(sk, cipher_2)
+    assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
 
 
 @pytest.mark.parametrize("plain", (0, 1, 3, 0.0, 1.1, 3.3))
@@ -89,7 +89,7 @@ def test_neg_enc_dec(plain, poly_mod=2048, coeff_mod=0, plain_mod=256, security=
     cipher_1 = cs.encrypt(pk, plain, base)
     cipher_2 = -(-cipher_1)
 
-    assert plain == cs.decrypt(sk, cipher_2)
+    assert abs(plain - cs.decrypt(sk, cipher_2)) <= 0.5
 
 
 @pytest.mark.parametrize("plain, expected", ((0, 0), (1, 1), (-1, 1), (3, 9),
@@ -102,7 +102,7 @@ def test_mult_enc_dec(plain, expected,
     cipher_1 = cs.encrypt(pk, plain, base)
     cipher_2 = cipher_1 * cipher_1
 
-    assert expected == cs.decrypt(sk, cipher_2)
+    assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
 
 
 @pytest.mark.parametrize("plain, power, expected", ((0, 1, 0), (0, 2, 0), (3, 1, 3), (3, 2, 9), (3, 3, 27), (3, 5, 243),
@@ -116,7 +116,7 @@ def test_pow_enc_dec(plain, power, expected,
     cipher_1 = cs.encrypt(pk, plain, base)
     cipher_2 = cipher_1 ** power
 
-    assert expected == cs.decrypt(sk, cipher_2)
+    assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
 
 
 @pytest.mark.parametrize("plain_1, base_1, plain_2, base_2", ((1, 2, 1, 3),))
