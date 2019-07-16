@@ -10,6 +10,9 @@ class Encoder:
     # used for object comparison
     _ATTRIBUTES = {}
 
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError
+
     def __new__(cls,
                 plain: Union[int, float, Type[int], Type[float]],
                 context: SEALContext,
@@ -49,7 +52,8 @@ class Encoder:
         for attr, val in attrs.items():
             setattr(self, attr, val)
 
-        super().__init__(self, **attrs)
+        # self.__class__ is dynamically assigned with the child class, and thus we find the right __init__
+        self.__class__.__init__(self, **attrs)
         return True
 
 
