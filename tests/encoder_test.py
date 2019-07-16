@@ -34,3 +34,15 @@ def test_eq(encoder_type, base, plain_mod):
     _, encoder2 = Encoder(encoder_type, cs._context, base=base)
 
     assert encoder1 == encoder2
+
+
+# noinspection PyProtectedMember
+@pytest.mark.parametrize("kwargs", ({"base": 2, "integral": 0.1, "fractional": 0.85},
+                                    {"base": 3, "integral": 0.1, "fractional": 0.85},
+                                    {"base": 2, "integral": 100, "fractional": 0.85},
+                                    {"base": 3, "integral": 100, "fractional": 0.85},
+                                    {"base": 2, "integral": 0.1, "fractional": 1000},
+                                    {"base": 3, "integral": 0.1, "fractional": 1000}))
+def test_float_coeff_allocation(kwargs, encoder_type=float):
+    cs = CipherScheme()
+    _ = Encoder(encoder_type, cs._context, **kwargs)
