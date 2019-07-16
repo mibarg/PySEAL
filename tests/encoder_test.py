@@ -18,7 +18,7 @@ def test_encoding_type(plain, encoder_type):
 
 
 # noinspection PyProtectedMember
-@pytest.mark.parametrize("plain, base, plain_mod", product([1, 0], [2, 3], [256, 293]))
+@pytest.mark.parametrize("plain, base, plain_mod", product([1.0, 0.0, 1, 0], [2, 3], [256, 293]))
 def test_encode_decode(plain, base, plain_mod):
     cs = CipherScheme()
     encoded, encoder = Encoder(plain, cs._context, base=base)
@@ -27,7 +27,7 @@ def test_encode_decode(plain, base, plain_mod):
 
 
 # noinspection PyProtectedMember
-@pytest.mark.parametrize("encoder_type, plain_mod, base", product([int], [256, 293], [2, 3]))
+@pytest.mark.parametrize("encoder_type, plain_mod, base", product([float, int], [256, 293], [2, 3]))
 def test_eq(encoder_type, base, plain_mod):
     cs = CipherScheme()
     encoder1 = Encoder(encoder_type, cs._context, base=base)

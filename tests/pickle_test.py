@@ -1,3 +1,4 @@
+import pytest
 import pickle
 
 from sealed import CipherScheme
@@ -19,7 +20,8 @@ def test_keys_pickle():
     _ = pickle.loads(pickle.dumps(sk_1))
 
 
-def test_cipher_pickle(plain=7, base=2):
+@pytest.mark.parametrize("plain", (7, 7.21))
+def test_cipher_pickle(plain, base=2):
     cs = CipherScheme()
     pk, sk = cs.generate_keys()
 
