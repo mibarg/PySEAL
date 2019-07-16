@@ -85,7 +85,7 @@ class IntEncoder(IntegerEncoder, Encoder):
         self._unsigned = unsigned
 
     def encode(self, plain: int) -> Plaintext:
-        if self.unsigned and plain < 0:
+        if self._unsigned and plain < 0:
             raise TypeError("IntEncoder for unsigned ints can encode only non-negative ints. See unsigned parameter.")
         return super().encode(plain)
 
