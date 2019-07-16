@@ -52,8 +52,11 @@ class Encoder:
         for attr, val in attrs.items():
             setattr(self, attr, val)
 
+        # remove underscore from attribute names
+        attrs_no_underscore = {k[1:]: v for k, v in attrs.items()}
+
         # self.__class__ is dynamically assigned with the child class, and thus we find the right __init__
-        self.__class__.__init__(self, **attrs)
+        self.__class__.__init__(self, **attrs_no_underscore)
         return True
 
 
