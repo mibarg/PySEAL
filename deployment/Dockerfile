@@ -18,7 +18,7 @@ RUN apt-get -qqy update && apt-get install -qqy \
 
 # Build SEAL libraries
 RUN mkdir -p SEAL/
-COPY /include /SEAL/SEAL/
+COPY /include /SEAL/
 WORKDIR /SEAL/SEAL/
 RUN chmod +x configure
 RUN sed -i -e 's/\r$//' configure
@@ -26,6 +26,9 @@ RUN ./configure
 RUN make
 ENV LD_LIBRARY_PATH SEAL/bin:$LD_LIBRARY_PATH
 ENV SEAL /SEAL
+
+# Delete SEAL log if exists, to enable caching of SEAL binaries
+RUN rm -f /SEAL/SEAL/config.log;
 
 # Install PyBind11
 WORKDIR /SEAL/
