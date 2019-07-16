@@ -1,71 +1,9 @@
-from typing import Union, Tuple, Type
-import logging
+from typing import Union, Type
 
 # noinspection PyProtectedMember
 from sealed._primitives import *
+from sealed.encode import Encoder
 from sealed.utils import is_pow_of_two
-
-
-class Encoder:
-    # TODO support matrices (PolyCRTBuilder), float (FractionalEncoder)
-    _TYPE = {int: IntegerEncoder, float: FractionalEncoder}
-
-    def __init__(self,
-                 typ: Union[int, float, Type[int], Type[float], Type[IntegerEncoder], Type[FractionalEncoder]],
-                 plain_mod: Union[SmallModulus, int],
-                 base: int):
-
-        # accept encoder_type as _ENCODER_TYPES, _PLAIN_TYPES or _PLAIN
-        if typ in Encoder._TYPE or type(typ) in Encoder._TYPE:
-            typ = self._encoding_type(typ)
-
-        # accept plain_mod as int or SmallModulus
-        if isinstance(plain_mod, int):
-            plain_mod = SmallModulus(plain_mod)
-
-        self._encoder_type = typ
-        self._plain_mod = plain_mod
-        self._base = base
-
-        # noinspection PyCallingNonCallable
-        self._encoder = typ(plain_mod, base)
-
-    def __eq__(self, other) -> bool:
-        if (isinstance(other, Encoder)
-                and self._encoder_type.__class__ == other._encoder_type.__class__
-                and self._plain_mod.value() == other._plain_mod.value()
-                and self._base == other._base):
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def _encoding_type(plain: Union[int, float, Type[int], Type[float]]
-                       ) -> Union[Type[IntegerEncoder], Type[FractionalEncoder]]:
-        logging.debug("encoding_type(plain={},type(plain)={})".format(plain, type(plain)))
-        for typ in Encoder._TYPE:
-            if isinstance(plain, typ) or plain == typ:
-                return Encoder._TYPE[typ]
-        return NotImplemented
-
-    @staticmethod
-    def from_plain(plain: Union[int, float, Type[int], Type[float]],
-                   plain_mod: Union[SmallModulus, int],
-                   base: int) -> Tuple[Plaintext, "Encoder"]:
-        encoder = Encoder(plain, plain_mod, base)
-        encoded = encoder.encode(plain)
-        return encoded, encoder
-
-    def encode(self, plain: Union[int, float]) -> Plaintext:
-        # TODO force non-negative?
-        return self._encoder.encode(plain)
-
-    def decode(self, encoded: Plaintext) -> Union[int, float]:
-        logging.debug("decode(encoded={},self._encoder_type={})".format(encoded, self._encoder_type))
-        if self._encoder_type == IntegerEncoder:
-            # TODO non int 32
-            return self._encoder.decode_int32(encoded)
-        return NotImplemented
 
 
 class CipherText:
@@ -86,10 +24,8 @@ class CipherText:
         return Evaluator(self._context)
 
     def _gen_encoder(self):
-        return Encoder(
-            self._plain_type,
-            self._context.plain_modulus(),
-            self._encoder_base)
+        _, encoder = Encoder(self._plain_type, self._context, base=self._encoder_base)
+        return encoder
 
     def __add__(self, other):
         if isinstance(other, CipherText) and self._encoder == other._encoder:
@@ -201,7 +137,7 @@ class CipherScheme:
 
     def encrypt(self, pk: PublicKey, plain: Union[int, float], base: int):
         # TODO force non-negative?
-        encoded, encoder = Encoder.from_plain(plain, self._context.plain_modulus(), base)
+        encoded, encoder = Encoder(plain, self._context, base=base)
 
         cipher = Ciphertext()
         Encryptor(self._context, pk).encrypt(encoded, cipher)
