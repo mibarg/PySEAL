@@ -17,12 +17,12 @@ class Encoder:
 
         if isinstance(plain, int) or plain is int:
             encoder = IntEncoder(context, **kwargs)
-            encoded = encoder.encode(plain) if plain is int else None
+            encoded = encoder.encode(plain) if plain is not int else None
             return encoded, encoder
 
         if isinstance(plain, float) or plain == float:
             encoder = FloatEncoder(context, **kwargs)
-            encoded = encoder.encode(plain) if plain is int else None
+            encoded = encoder.encode(plain) if plain is not float else None
             return encoded, encoder
 
         raise NotImplementedError("Encoder supports only int or float.")
@@ -106,7 +106,9 @@ class FloatEncoder(FractionalEncoder, Encoder):
     _ATTRIBUTES = {"_context", "_integral", "_fractional", "_base"}
 
     def __init__(self, context: SEALContext,
-                 integral: Union[int, float], fractional: Union[int, float], base: int = 2, **kwargs):
+                 integral: Union[int, float] = 0.4,
+                 fractional: Union[int, float] = 0.4,
+                 base: int = 2, **kwargs):
 
         # enable easy access to context attributes
         plain_mod = context.plain_modulus()
