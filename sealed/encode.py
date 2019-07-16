@@ -41,7 +41,7 @@ class Encoder:
             return False
 
     def __getstate__(self):
-        return (getattr(self, attr) for attr in self._ATTRIBUTES)
+        return [getattr(self, attr) for attr in self._ATTRIBUTES]
 
     def __setstate__(self, state):
         attrs = dict(zip(self._ATTRIBUTES, state))
