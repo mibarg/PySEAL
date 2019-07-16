@@ -3,7 +3,7 @@ import logging
 
 # noinspection PyProtectedMember
 from sealed._primitives import *
-from sealed.utils import is_pow_of_two, get_plain_mod
+from sealed.utils import is_pow_of_two
 
 
 class Encoder:
