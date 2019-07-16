@@ -7,25 +7,18 @@ from sealed.utils import is_pow_of_two
 
 
 class CipherText:
-    def __init__(self, cipher: Ciphertext,
-                 context: SEALContext, plain_type: Union[Type[int], Type[float]], encoder_base: int,
-                 evl: Evaluator = None, encoder: Encoder = None):
+    def __init__(self, cipher: Ciphertext, context: SEALContext, encoder: Encoder,
+                 evl: Evaluator = None):
         self._cipher = cipher
 
         self._context = context
-        self._plain_type = plain_type
-        self._encoder_base = encoder_base
+        self._encoder = encoder
 
         # non-pickelizable properties
         self._evl = evl if evl else self._gen_evaluator()
-        self._encoder = encoder if encoder else self._gen_encoder()
 
     def _gen_evaluator(self):
         return Evaluator(self._context)
-
-    def _gen_encoder(self):
-        _, encoder = Encoder(self._plain_type, self._context, base=self._encoder_base)
-        return encoder
 
     def __add__(self, other):
         if isinstance(other, CipherText) and self._encoder == other._encoder:
@@ -68,17 +61,16 @@ class CipherText:
             return NotImplemented
 
     def __copy__(self):
-        return CipherText(self._cipher, self._context, self._plain_type, self._encoder_base, self._evl, self._encoder)
+        return CipherText(self._cipher, self._context, self._encoder)
 
     def __getstate__(self):
-        return self._cipher, self._context, self._plain_type, self._encoder_base
+        return self._cipher, self._context, self._encoder
 
     def __setstate__(self, state):
-        self._cipher, self._context, self._plain_type, self._encoder_base = state
+        self._cipher, self._context, self._encoder = state
 
         # non-pickelizable properties
         self._evl = self._gen_evaluator()
-        self._encoder = self._gen_encoder()
 
         return True
 
@@ -135,14 +127,14 @@ class CipherScheme:
         sk = self._keygen.secret_key()
         return pk, sk
 
-    def encrypt(self, pk: PublicKey, plain: Union[int, float], base: int):
+    def encrypt(self, pk: PublicKey, plain: Union[int, float], **kwargs):
         # TODO force non-negative?
-        encoded, encoder = Encoder(plain, self._context, base=base)
+        encoded, encoder = Encoder(plain, self._context, **kwargs)
 
         cipher = Ciphertext()
         Encryptor(self._context, pk).encrypt(encoded, cipher)
 
-        return CipherText(cipher, self._context, type(plain), base, self._evl, encoder)
+        return CipherText(cipher, self._context, encoder)
 
     # noinspection PyProtectedMember
     def decrypt(self, sk: SecretKey, cipher: CipherText):

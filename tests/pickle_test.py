@@ -25,7 +25,7 @@ def test_cipher_pickle(plain, base=2):
     cs = CipherScheme()
     pk, sk = cs.generate_keys()
 
-    e_1 = cs.encrypt(pk, plain, base)
+    e_1 = cs.encrypt(pk, plain, base=base)
     e_2 = pickle.loads(pickle.dumps(e_1))
 
     assert cs.decrypt(sk, e_2) == plain

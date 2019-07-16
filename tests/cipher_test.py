@@ -10,7 +10,7 @@ def test_fresh_size(coeff_mod, plain_mod,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher = cs.encrypt(pk, plain, base)
+    cipher = cs.encrypt(pk, plain, base=base)
 
     assert cipher.size() == 2
 
@@ -22,7 +22,7 @@ def test_add_noise_budget(coeff_mod, plain_mod, expected_noise,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = cipher_1 + cipher_1
 
     # Addition consumes ~ 1 bit of noise
@@ -36,7 +36,7 @@ def test_neg_noise_budget(coeff_mod, plain_mod, expected_noise,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = -cipher_1
 
     # Negation consumes ~ zero noise bits
@@ -50,7 +50,7 @@ def test_mult_noise_budget(coeff_mod, plain_mod, expected_noise,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = cipher_1 * cipher_1
 
     # Multiplication consumes ~ half the noise budget
@@ -63,7 +63,7 @@ def test_pow_noise_budget(coeff_mod, plain_mod, expected_noise,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = cipher_1 ** power
 
     assert abs(expected_noise - cs.noise_budget(sk, cipher_2)) <= 7
@@ -75,7 +75,7 @@ def test_add_enc_dec(plain, expected,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = cipher_1 + cipher_1
 
     assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
@@ -86,7 +86,7 @@ def test_neg_enc_dec(plain, poly_mod=2048, coeff_mod=0, plain_mod=256, security=
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = -(-cipher_1)
 
     assert abs(plain - cs.decrypt(sk, cipher_2)) <= 0.5
@@ -99,7 +99,7 @@ def test_mult_enc_dec(plain, expected,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = cipher_1 * cipher_1
 
     assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
@@ -113,7 +113,7 @@ def test_pow_enc_dec(plain, power, expected,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = cipher_1 ** power
 
     assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
@@ -126,8 +126,8 @@ def test_type_inconsistency(plain_1, base_1, plain_2, base_2,
     pk, sk = cs.generate_keys()
 
     # int in different base
-    cipher_1 = cs.encrypt(pk, plain_1, base_1)
-    cipher_2 = cs.encrypt(pk, plain_2, base_2)
+    cipher_1 = cs.encrypt(pk, plain_1, base=base_1)
+    cipher_2 = cs.encrypt(pk, plain_2, base=base_2)
     with pytest.raises(TypeError):
         _ = cipher_1 + cipher_2
     with pytest.raises(TypeError):

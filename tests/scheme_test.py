@@ -33,7 +33,7 @@ def test_fresh_noise_budget(coeff_mod, plain_mod, expected_noise,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher = cs.encrypt(pk, plain, base)
+    cipher = cs.encrypt(pk, plain, base=base)
 
     # Noise budget in bits ~ log2(coeff_modulus/plain_modulus)
     assert abs(expected_noise - cs.noise_budget(sk, cipher)) <= 1
@@ -44,7 +44,7 @@ def test_enc_dec(poly_mod, coeff_mod, plain_mod, security, plain, base):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    assert plain == cs.decrypt(sk, cs.encrypt(pk, plain, base))
+    assert plain == cs.decrypt(sk, cs.encrypt(pk, plain, base=base))
 
 
 @pytest.mark.parametrize("dbc, expected_noise",
@@ -54,7 +54,7 @@ def test_relinearize(dbc, expected_noise,
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
-    cipher_1 = cs.encrypt(pk, plain, base)
+    cipher_1 = cs.encrypt(pk, plain, base=base)
     cipher_2 = cs.relinearize(cipher_1 * cipher_1, dbc)
 
     assert abs(expected_noise - cs.noise_budget(sk, cipher_2)) <= 2
