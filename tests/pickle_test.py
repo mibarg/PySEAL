@@ -1,6 +1,7 @@
 import pytest
 import pickle
 
+from sealed.encode import Encoder
 from sealed import CipherScheme
 
 
@@ -29,3 +30,14 @@ def test_cipher_pickle(plain, base=2):
     e_2 = pickle.loads(pickle.dumps(e_1))
 
     assert cs.decrypt(sk, e_2) == plain
+
+
+# noinspection PyProtectedMember
+@pytest.mark.parametrize("plain", (7, 7.21))
+def test_encoder_pickle(plain):
+    context = CipherScheme()._context
+
+    _, e_1 = Encoder(plain, context)
+    e_2 = pickle.loads(pickle.dumps(e_1))
+
+    assert e_1 == e_2
