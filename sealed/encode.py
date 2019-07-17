@@ -35,6 +35,14 @@ class Encoder:
     def decode(self, encoded: Plaintext):
         raise NotImplementedError
 
+    def can_encode(self, plain) -> bool:
+        try:
+            _ = self.encode(plain)
+        except TypeError:
+            return False
+        else:
+            return True
+
     def __eq__(self, other):
         if (isinstance(other, self.__class__)
                 and all((getattr(self, attr) == getattr(other, attr) for attr in self._ATTRIBUTES))):
@@ -87,6 +95,8 @@ class IntEncoder(IntegerEncoder, Encoder):
         self._unsigned = unsigned
 
     def encode(self, plain: int) -> Plaintext:
+        if not isinstance(plain, int):
+            raise TypeError("IntEncoder cannot encode %s." % type(plain))
         if self._unsigned and plain < 0:
             raise TypeError("IntEncoder for unsigned ints can encode only non-negative ints. See unsigned parameter.")
         return super().encode(plain)
@@ -154,6 +164,8 @@ class FloatEncoder(FractionalEncoder, Encoder):
         self._base = base
 
     def encode(self, plain: float) -> Plaintext:
+        if not isinstance(plain, float):
+            raise TypeError("FloatEncoder cannot encode %s." % type(plain))
         return super().encode(plain)
 
     # noinspection PyMethodOverriding

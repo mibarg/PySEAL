@@ -105,9 +105,22 @@ def test_mult_enc_dec(plain, expected,
     assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
 
 
-@pytest.mark.parametrize("plain, power, expected", ((0, 1, 0), (0, 2, 0), (3, 1, 3), (3, 2, 9), (3, 3, 27), (3, 5, 243),
-                                                    (0.0, 1, 0.0), (0.0, 2, 0.0), (3.3, 1, 3.3), (3.3, 2, 10.89),
-                                                    (3.3, 3, 35.937), (3.3, 5, 391.35393)))
+@pytest.mark.parametrize("plain_1, plain_2, expected",
+                         ((0.0, 0.0), (1.0, 1.0), (-1.0, 1.0), (3.3, 3.3), (7.0, 0.1)))
+def test_mult_by_plain_enc_dec(plain_1, plain_2,
+                               poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
+    cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
+    pk, sk = cs.generate_keys()
+
+    cipher_1 = cs.encrypt(pk, plain_1, base=base)
+    cipher_2 = cipher_1 * plain_2
+
+    assert abs((plain_1 * plain_2) - cs.decrypt(sk, cipher_2)) <= 0.5
+
+
+@pytest.mark.parametrize("plain, power", ((0, 1, 0), (0, 2, 0), (3, 1, 3), (3, 2, 9), (3, 3, 27), (3, 5, 243),
+                                          (0.0, 1, 0.0), (0.0, 2, 0.0), (3.3, 1, 3.3), (3.3, 2, 10.89),
+                                          (3.3, 3, 35.937), (3.3, 5, 391.35393)))
 def test_pow_enc_dec(plain, power, expected,
                      poly_mod=8192, coeff_mod=0, plain_mod=1024, security=128, base=2):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
