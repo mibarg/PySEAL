@@ -43,7 +43,7 @@ class CipherText:
             res = Ciphertext()
             self._evl.multiply(self._cipher, other._cipher, res)
             return self.init_new(res)
-        elif self._encoder.can_encode(other):
+        elif self._encoder.can_encode(other) and other not in (0, 0.0):
             res = Ciphertext()
             self._evl.multiply_plain(self._cipher, self._encoder.encode(other), res)
             return self.init_new(res)

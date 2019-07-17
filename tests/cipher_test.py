@@ -106,8 +106,8 @@ def test_mult_enc_dec(plain, expected,
 
 
 @pytest.mark.parametrize("plain_1, plain_2",
-                         ((0.0, 0.0), (1.0, 1.0), (-1.0, 1.0), (3.3, 3.3), (7.0, 0.1),
-                          (0, 0), (1, 1), (-1, 1), (3, 3), (7, 1)))
+                         ((1.0, 1.0), (-1.0, 1.0), (3.3, 3.3), (7.0, 0.1),
+                          (1, 1), (-1, 1), (3, 3), (7, 1)))
 def test_mult_by_plain_enc_dec(plain_1, plain_2,
                                poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
