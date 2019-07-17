@@ -1,95 +1,23 @@
-from typing import Union, Tuple, Type
-import logging
+from typing import Union, Type
 
-# noinspection PyProtectedMember
-from sealed._primitives import *
-from sealed.utils import is_pow_of_two, get_plain_mod
-
-
-class Encoder:
-    # TODO support matrices (PolyCRTBuilder), float (FractionalEncoder)
-    _TYPE = {int: IntegerEncoder, float: FractionalEncoder}
-
-    def __init__(self,
-                 typ: Union[int, float, Type[int], Type[float], Type[IntegerEncoder], Type[FractionalEncoder]],
-                 plain_mod: Union[SmallModulus, int],
-                 base: int):
-
-        # accept encoder_type as _ENCODER_TYPES, _PLAIN_TYPES or _PLAIN
-        if typ in Encoder._TYPE or type(typ) in Encoder._TYPE:
-            typ = self._encoding_type(typ)
-
-        # accept plain_mod as int or SmallModulus
-        if isinstance(plain_mod, int):
-            plain_mod = SmallModulus(plain_mod)
-
-        self._encoder_type = typ
-        self._plain_mod = plain_mod
-        self._base = base
-
-        # noinspection PyCallingNonCallable
-        self._encoder = typ(plain_mod, base)
-
-    def __eq__(self, other) -> bool:
-        if (isinstance(other, Encoder)
-                and self._encoder_type.__class__ == other._encoder_type.__class__
-                and self._plain_mod.value() == other._plain_mod.value()
-                and self._base == other._base):
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def _encoding_type(plain: Union[int, float, Type[int], Type[float]]
-                       ) -> Union[Type[IntegerEncoder], Type[FractionalEncoder]]:
-        logging.debug("encoding_type(plain={},type(plain)={})".format(plain, type(plain)))
-        for typ in Encoder._TYPE:
-            if isinstance(plain, typ) or plain == typ:
-                return Encoder._TYPE[typ]
-        return NotImplemented
-
-    @staticmethod
-    def from_plain(plain: Union[int, float, Type[int], Type[float]],
-                   plain_mod: Union[SmallModulus, int],
-                   base: int) -> Tuple[Plaintext, "Encoder"]:
-        encoder = Encoder(plain, plain_mod, base)
-        encoded = encoder.encode(plain)
-        return encoded, encoder
-
-    def encode(self, plain: Union[int, float]) -> Plaintext:
-        # TODO force non-negative?
-        return self._encoder.encode(plain)
-
-    def decode(self, encoded: Plaintext) -> Union[int, float]:
-        logging.debug("decode(encoded={},self._encoder_type={})".format(encoded, self._encoder_type))
-        if self._encoder_type == IntegerEncoder:
-            # TODO non int 32
-            return self._encoder.decode_int32(encoded)
-        return NotImplemented
+from sealed.primitives import *
+from sealed.encode import Encoder
+from sealed.utils import is_pow_of_two
 
 
 class CipherText:
-    def __init__(self, cipher: Ciphertext,
-                 context: SEALContext, plain_type: Union[Type[int], Type[float]], encoder_base: int,
-                 evl: Evaluator = None, encoder: Encoder = None):
+    def __init__(self, cipher: Ciphertext, context: SEALContext, encoder: Encoder,
+                 evl: Evaluator = None):
         self._cipher = cipher
 
         self._context = context
-        self._plain_type = plain_type
-        self._encoder_base = encoder_base
+        self._encoder = encoder
 
         # non-pickelizable properties
         self._evl = evl if evl else self._gen_evaluator()
-        self._encoder = encoder if encoder else self._gen_encoder()
 
     def _gen_evaluator(self):
         return Evaluator(self._context)
-
-    def _gen_encoder(self):
-        return Encoder(
-            self._plain_type,
-            self._context.plain_modulus(),
-            self._encoder_base)
 
     def __add__(self, other):
         if isinstance(other, CipherText) and self._encoder == other._encoder:
@@ -132,17 +60,16 @@ class CipherText:
             return NotImplemented
 
     def __copy__(self):
-        return CipherText(self._cipher, self._context, self._plain_type, self._encoder_base, self._evl, self._encoder)
+        return CipherText(self._cipher, self._context, self._encoder)
 
     def __getstate__(self):
-        return self._cipher, self._context, self._plain_type, self._encoder_base
+        return self._cipher, self._context, self._encoder
 
     def __setstate__(self, state):
-        self._cipher, self._context, self._plain_type, self._encoder_base = state
+        self._cipher, self._context, self._encoder = state
 
         # non-pickelizable properties
         self._evl = self._gen_evaluator()
-        self._encoder = self._gen_encoder()
 
         return True
 
@@ -199,14 +126,13 @@ class CipherScheme:
         sk = self._keygen.secret_key()
         return pk, sk
 
-    def encrypt(self, pk: PublicKey, plain: Union[int, float], base: int):
-        # TODO force non-negative?
-        encoded, encoder = Encoder.from_plain(plain, self._context.plain_modulus(), base)
+    def encrypt(self, pk: PublicKey, plain: Union[int, float], **kwargs):
+        encoded, encoder = Encoder(plain, self._context, **kwargs)
 
         cipher = Ciphertext()
         Encryptor(self._context, pk).encrypt(encoded, cipher)
 
-        return CipherText(cipher, self._context, type(plain), base, self._evl, encoder)
+        return CipherText(cipher, self._context, encoder)
 
     # noinspection PyProtectedMember
     def decrypt(self, sk: SecretKey, cipher: CipherText):
@@ -249,10 +175,7 @@ class CipherScheme:
             self._context.plain_modulus().value(), self._context.noise_standard_deviation())
 
     def __eq__(self, other) -> bool:
-        if (isinstance(other, CipherScheme)
-                and self._context.poly_modulus().coeff_count() == other._context.poly_modulus().coeff_count()
-                and self._context.total_coeff_modulus().significant_bit_count() == other._context.total_coeff_modulus().significant_bit_count()
-                and self._context.plain_modulus().value() == other._context.plain_modulus().value()):
+        if isinstance(other, CipherScheme) and self._context == other._context:
             return True
         else:
             return False
