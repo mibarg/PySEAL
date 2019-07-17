@@ -1,7 +1,6 @@
 from typing import Union, Tuple, Type
 
-# noinspection PyProtectedMember
-from sealed._primitives import *
+from sealed.primitives import *
 
 
 class Encoder:
@@ -58,6 +57,9 @@ class Encoder:
         # self.__class__ is dynamically assigned with the child class, and thus we find the right __init__
         self.__class__.__init__(self, **attrs_no_underscore)
         return True
+
+    def __str__(self):
+        return "{}({})".format(self.__class__.__name__, self.__dict__)
 
 
 class IntEncoder(IntegerEncoder, Encoder):

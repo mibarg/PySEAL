@@ -1,7 +1,6 @@
 from typing import Union, Type
 
-# noinspection PyProtectedMember
-from sealed._primitives import *
+from sealed.primitives import *
 from sealed.encode import Encoder
 from sealed.utils import is_pow_of_two
 
@@ -176,10 +175,7 @@ class CipherScheme:
             self._context.plain_modulus().value(), self._context.noise_standard_deviation())
 
     def __eq__(self, other) -> bool:
-        if (isinstance(other, CipherScheme)
-                and self._context.poly_modulus().coeff_count() == other._context.poly_modulus().coeff_count()
-                and self._context.total_coeff_modulus().significant_bit_count() == other._context.total_coeff_modulus().significant_bit_count()
-                and self._context.plain_modulus().value() == other._context.plain_modulus().value()):
+        if isinstance(other, CipherScheme) and self._context == other._context:
             return True
         else:
             return False
