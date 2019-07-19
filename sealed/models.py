@@ -25,8 +25,15 @@ class CipherText:
             res = Ciphertext()
             self._evl.add(self._cipher, other._cipher, res)
             return self.init_new(res)
+        elif self._encoder.can_encode(other):
+            res = Ciphertext()
+            self._evl.add_plain(self._cipher, self._encoder.encode(other), res)
+            return self.init_new(res)
         else:
             return NotImplemented
+
+    def __radd__(self, other):
+        return self.__add__(other)
 
     def __neg__(self):
         res = Ciphertext()

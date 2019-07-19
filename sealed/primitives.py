@@ -15,3 +15,16 @@ class SEALContext(SEALContext):
 
     def poly_mod_deg(self):
         return self.poly_modulus().coeff_count() - 1
+
+
+class ChooserEncoder(ChooserEncoder):
+    def __init__(self, base: int = 2):
+        super().__init__(base)
+
+
+class ChooserPoly(ChooserPoly):
+    def __init__(self, max_num_coeff: int = None, max_coeff_abs_val: int = None):
+        if max_num_coeff is None and max_coeff_abs_val is None:
+            super().__init__()
+        else:
+            super().__init__(max_num_coeff, max_coeff_abs_val)

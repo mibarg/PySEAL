@@ -81,6 +81,20 @@ def test_add_enc_dec(plain, expected,
     assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
 
 
+@pytest.mark.parametrize("plain", (0, 1, 3, 0.0, 1.1, 3.3, 6.6))
+def test_add_plain_enc_dec(plain,
+                           poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
+    cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
+    pk, sk = cs.generate_keys()
+
+    cipher_1 = cs.encrypt(pk, plain, base=base)
+    cipher_2 = plain + cipher_1
+
+    expected = plain + plain
+
+    assert abs(expected - cs.decrypt(sk, cipher_2)) <= 0.5
+
+
 @pytest.mark.parametrize("plain", (0, 1, 3, 0.0, 1.1, 3.3))
 def test_neg_enc_dec(plain, poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
