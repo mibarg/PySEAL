@@ -1,5 +1,5 @@
 import os
-from os.path import join, dirname, basename
+from os.path import join
 import sys
 from distutils.core import setup, Extension
 from distutils import sysconfig

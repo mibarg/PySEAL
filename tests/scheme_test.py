@@ -4,7 +4,8 @@ from itertools import product
 from sealed.models import CipherScheme
 
 
-@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security", product([2**11, 2**14], [0, 0x7fffffffaa0001], [256, 293], [128, 192]))
+@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security",
+                         product([2**11, 2**14], [0, 0x7fffffffaa0001], [256, 293], [128, 192]))
 def test_eq(poly_mod, coeff_mod, plain_mod, security):
     cs1 = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     cs2 = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
@@ -12,14 +13,16 @@ def test_eq(poly_mod, coeff_mod, plain_mod, security):
     assert cs1 == cs2
 
 
-@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security", product([2**11, 2**14], [0, 0x7fffffffaa0001], [256, 293], [128, 192]))
+@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security",
+                         product([2**11, 2**14], [0, 0x7fffffffaa0001], [256, 293], [128, 192]))
 def test_str(poly_mod, coeff_mod, plain_mod, security):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
 
     _ = str(cs)
 
 
-@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security", product([2**11, 2**14], [0, 0x7fffffffaa0001], [256, 293], [128, 192]))
+@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security",
+                         product([2**11, 2**14], [0, 0x7fffffffaa0001], [256, 293], [128, 192]))
 def test_key_generation(poly_mod, coeff_mod, plain_mod, security):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
 
@@ -39,7 +42,9 @@ def test_fresh_noise_budget(coeff_mod, plain_mod, expected_noise,
     assert abs(expected_noise - cs.noise_budget(sk, cipher)) <= 1
 
 
-@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security, plain, base", product([2**11, 2**14], [0, 0x7fffffffaa0001], [256, 293], [128, 192], [1, 0, 1.1, 0.43], [2, 3]))
+@pytest.mark.parametrize("poly_mod, coeff_mod, plain_mod, security, plain, base",
+                         product([2**11, 2**14], [0, 0x7fffffffaa0001], [256, 293],
+                                 [128, 192], [1, 0, 1.1, 0.43], [2, 3]))
 def test_enc_dec(poly_mod, coeff_mod, plain_mod, security, plain, base):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()

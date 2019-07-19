@@ -1,7 +1,8 @@
 import pytest
 from itertools import product
+import numpy as np
 
-from sealed.encode import Encoder, IntEncoder, FloatEncoder
+from sealed.encode import Encoder, IntEncoder, FloatEncoder, IntMatrixEncoder
 from sealed.models import CipherScheme
 
 
@@ -9,27 +10,32 @@ from sealed.models import CipherScheme
 @pytest.mark.parametrize("plain, encoder_type",
                          [(1, IntEncoder), (0, IntEncoder),
                           (1.0, FloatEncoder), (0.0, FloatEncoder),
-                          (int, IntEncoder), (float, FloatEncoder)])
-def test_encoding_type(plain, encoder_type):
-    cs = CipherScheme()
+                          (np.ones((2, 2048), int), IntMatrixEncoder),
+                          (int, IntEncoder), (float, FloatEncoder),
+                          (np.ndarray, IntMatrixEncoder)])
+def test_encoding_type(plain, encoder_type, poly_mod=4096, plain_mod=40961):
+    cs = CipherScheme(poly_mod, plain_mod=plain_mod)
     _, encoder = Encoder(plain, cs._context)
 
     assert isinstance(encoder, encoder_type)
 
 
 # noinspection PyProtectedMember
-@pytest.mark.parametrize("plain, base, plain_mod", product([1.0, 0.0, 1, 0], [2, 3], [256, 293]))
-def test_encode_decode(plain, base, plain_mod):
-    cs = CipherScheme()
+@pytest.mark.parametrize("plain, base", product([1.0, 0.0, 1, 0, np.ones((2, 2048), int)], [2, 3]))
+def test_encode_decode(plain, base, poly_mod=4096, plain_mod=40961):
+    cs = CipherScheme(poly_mod, plain_mod=plain_mod)
     encoded, encoder = Encoder(plain, cs._context, base=base)
 
-    assert plain == encoder.decode(encoded)
+    if isinstance(plain, np.ndarray):
+        assert (plain == encoder.decode(encoded)).all()
+    else:
+        assert plain == encoder.decode(encoded)
 
 
 # noinspection PyProtectedMember
-@pytest.mark.parametrize("encoder_type, plain_mod, base", product([float, int], [256, 293], [2, 3]))
-def test_eq(encoder_type, base, plain_mod):
-    cs = CipherScheme()
+@pytest.mark.parametrize("encoder_type, base", product([float, int, np.ndarray], [2, 3]))
+def test_eq(encoder_type, base, poly_mod=4096, plain_mod=40961):
+    cs = CipherScheme(poly_mod, plain_mod=plain_mod)
     _, encoder1 = Encoder(encoder_type, cs._context, base=base)
     _, encoder2 = Encoder(encoder_type, cs._context, base=base)
 

@@ -1,4 +1,6 @@
 from typing import Union, Tuple, Type
+import numpy as np
+from sympy import isprime
 
 from sealed.primitives import *
 
@@ -13,9 +15,15 @@ class Encoder:
         raise NotImplementedError
 
     def __new__(cls,
-                plain: Union[int, float, Type[int], Type[float]],
+                plain: Union[int, float, np.ndarray, Type[int], Type[float], Type[np.ndarray]],
                 context: SEALContext,
                 **kwargs) -> Tuple[Union[None, Plaintext], "Encoder"]:
+
+        # numpy test must be first because comparison is calculated element-wise on int, float
+        if isinstance(plain, np.ndarray) or plain == np.ndarray:
+            encoder = IntMatrixEncoder(context, **kwargs)
+            encoded = encoder.encode(plain) if plain is not np.ndarray else None
+            return encoded, encoder
 
         if isinstance(plain, int) or plain is int:
             encoder = IntEncoder(context, **kwargs)
@@ -27,7 +35,7 @@ class Encoder:
             encoded = encoder.encode(plain) if plain is not float else None
             return encoded, encoder
 
-        raise NotImplementedError("Encoder supports only int or float.")
+        raise NotImplementedError("Encoder supports only int, float or np.ndarray.")
 
     def encode(self, plain) -> Plaintext:
         raise NotImplementedError
@@ -88,7 +96,15 @@ class IntEncoder(IntegerEncoder, Encoder):
 
     _ATTRIBUTES = {"_context", "_base", "_unsigned"}
 
+    # noinspection PyUnusedLocal
     def __init__(self, context: SEALContext, base: int = 2, unsigned: bool = False, **kwargs):
+        """
+        :param context: SEALContext
+        :param base: base for integer encoding
+        :param unsigned: signed or unsigned int
+        :param kwargs: not used, allows using Encoder parent class with kwargs each child class
+        """
+
         super().__init__(context.plain_modulus(), base)
         self._context = context
         self._base = base
@@ -126,15 +142,23 @@ class FloatEncoder(FractionalEncoder, Encoder):
 
     _ATTRIBUTES = {"_context", "_integral", "_fractional", "_base"}
 
+    # noinspection PyUnusedLocal
     def __init__(self, context: SEALContext,
                  integral: Union[int, float] = 0.4,
                  fractional: Union[int, float] = 0.4,
                  base: int = 2, **kwargs):
+        """
+        :param context: SEALContext
+        :param integral: number of coefficients kept for the integral part of the rational number
+        :param fractional: number of coefficients kept for the fractional part of the rational number
+        :param base: base for integer encoding
+        :param kwargs: not used, allows using Encoder parent class with kwargs each child class
+        """
 
         # enable easy access to context attributes
         plain_mod = context.plain_modulus()
         poly_mod = context.poly_modulus()
-        poly_num_coeff = (poly_mod.coeff_count() - 1)
+        poly_mod_deg = context.poly_mod_deg()
 
         # validate integral argument
         if isinstance(integral, float):
@@ -142,7 +166,7 @@ class FloatEncoder(FractionalEncoder, Encoder):
                 raise TypeError("Invalid argument for integral.")
 
             # take integral as a fraction of available polynomial coefficients
-            integral = int(integral * poly_num_coeff)
+            integral = int(integral * poly_mod_deg)
 
         # validate fractional argument
         if isinstance(fractional, float):
@@ -150,10 +174,10 @@ class FloatEncoder(FractionalEncoder, Encoder):
                 raise TypeError("Invalid argument for fractional.")
 
             # take integral as a fraction of available polynomial coefficients
-            fractional = int(fractional * poly_num_coeff)
+            fractional = int(fractional * poly_mod_deg)
 
         # validate fractional and integral combination is valid
-        if integral + fractional > poly_num_coeff:
+        if integral + fractional > poly_mod_deg:
             raise TypeError("Invalid combination of arguments for integral and fractional.")
 
         super().__init__(plain_mod, poly_mod, integral, fractional, base)
@@ -171,3 +195,90 @@ class FloatEncoder(FractionalEncoder, Encoder):
     # noinspection PyMethodOverriding
     def decode(self, encoded: Plaintext):
         return super().decode(encoded)
+
+
+class IntMatrixEncoder(PolyCRTBuilder, Encoder):
+    """
+    If plain_modulus is a prime congruent to 1 modulo 2*degree(poly_modulus), the
+        plaintext elements can be viewed as 2-by-(degree(poly_modulus) / 2) matrices
+        with elements integers modulo plain_modulus.
+    When a desired computation can be vectorized, using PolyCRTBuilder can result in
+        massive performance improvements over naively encrypting and operating on each
+        input number separately. Thus, in more complicated computations this is likely
+        to be by far the most important and useful encoder.
+    """
+
+    _ATTRIBUTES = {"_context", "_rows", "_cols"}
+
+    # noinspection PyUnusedLocal
+    def __init__(self, context: SEALContext, rows: int = 0, cols: int = 0, **kwargs):
+        """
+        :param context: SEALContext
+        :param rows: number of rows in the matrix. evaluated on first call to encode() if not provided.
+        :param cols: number of columns in the matrix. evaluated on first call to encode() if not provided.
+        :param kwargs: not used, allows using Encoder parent class with kwargs each child class
+        """
+
+        # Verify parameters allow cipher batching
+        n = context.poly_mod_deg()
+        t = context.plain_modulus().value()
+        if not (isprime(t) and t % (2 * n) == 1):
+            raise TypeError("Batching requires that plain_mod degree be prime and congruent to 1 modulo 2 * poly_mod.")
+
+        # In case rows and cols were not provided (i.e. zero), they will be lazy evaluated at first encode() call
+        if rows > 0 and cols > 0:
+            # Matrix size should align with poly_mod_deg
+            if not rows * cols == self._context.poly_mod_deg():
+                raise TypeError("matrix rows * cols must equal poly_mod.")
+
+        super().__init__(context)
+
+        self._context = context
+        self._rows = rows
+        self._cols = cols
+
+    def encode(self, plain: np.ndarray) -> Plaintext:
+        if (isinstance(plain, np.ndarray)
+                and len(plain.shape) == 2
+                and plain.dtype == np.dtype(int)):
+
+            # In case _rows and _cols are are not known yet
+            if self._rows <= 0 and self._cols <= 0:
+                # evaluate them from 'plain'
+                self._rows, self._cols = plain.shape
+
+                # Matrix size should align with poly_mod_deg
+                if not self._rows * self._cols == self._context.poly_mod_deg():
+                    raise TypeError("matrix rows * cols must equal poly_mod.")
+
+            # Once _rows and _cols are known, 'plain' should align to them
+            if plain.shape[0] == self._rows and plain.shape[1] == self._cols:
+
+                # Input is valid, we can start encoding
+
+                # numpy to list
+                flat_list = plain.flatten().tolist()
+
+                # list to Plaintext
+                plain_mat = Plaintext()
+                self.compose(flat_list, plain_mat)
+
+                return plain_mat
+
+        # Invalid input
+        raise TypeError("IntMatrixEncoder can only encode integer matrices "
+                        "with two dimensions where rows * cols equals poly_mod.")
+
+    # noinspection PyMethodOverriding
+    def decode(self, encoded: Plaintext):
+        # WARNING: this function currently has the side affect of decomposing 'encoded'
+        # TODO deal with side affect
+
+        # Plaintext to list
+        self.decompose(encoded)
+        plain_list = [encoded.coeff_at(i) for i in range(encoded.coeff_count())]
+
+        # list to numpy
+        plain = np.asarray(plain_list).reshape((self._rows, self._cols))
+
+        return plain

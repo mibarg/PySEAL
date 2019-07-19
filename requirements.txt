@@ -3,3 +3,5 @@ pybind11
 cppimport
 jupyter
 pytest
+numpy
+sympy

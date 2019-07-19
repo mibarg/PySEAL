@@ -45,8 +45,8 @@ def test_neg_noise_budget(coeff_mod, plain_mod, expected_noise,
 
 @pytest.mark.parametrize("coeff_mod, plain_mod, expected_noise",
                          ((0, 256, 38), (0, 293, 37), (0x7fffffffba0001, 256, 36), (0x7fffffffba0001, 293, 36)))
-def test_mult_noise_budget(coeff_mod, plain_mod, expected_noise,
-                           poly_mod=2048, security=128, plain=1, base=2):
+def test_mul_noise_budget(coeff_mod, plain_mod, expected_noise,
+                          poly_mod=2048, security=128, plain=1, base=2):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
@@ -94,8 +94,8 @@ def test_neg_enc_dec(plain, poly_mod=2048, coeff_mod=0, plain_mod=256, security=
 
 @pytest.mark.parametrize("plain, expected", ((0, 0), (1, 1), (-1, 1), (3, 9),
                                              (0.0, 0.0), (1.0, 1.0), (-1.0, 1.0), (3.3, 10.89)))
-def test_mult_enc_dec(plain, expected,
-                      poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
+def test_mul_enc_dec(plain, expected,
+                     poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
@@ -108,8 +108,8 @@ def test_mult_enc_dec(plain, expected,
 @pytest.mark.parametrize("plain_1, plain_2",
                          ((1.0, 1.0), (-1.0, 1.0), (3.3, 3.3), (7.0, 0.1),
                           (1, 1), (-1, 1), (3, 3), (7, 1)))
-def test_mult_by_plain_enc_dec(plain_1, plain_2,
-                               poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
+def test_mul_by_plain_enc_dec(plain_1, plain_2,
+                              poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
     pk, sk = cs.generate_keys()
 
@@ -120,8 +120,8 @@ def test_mult_by_plain_enc_dec(plain_1, plain_2,
 
 
 @pytest.mark.parametrize("plain, power, expected", ((0, 1, 0), (0, 2, 0), (3, 1, 3), (3, 2, 9), (3, 3, 27), (3, 5, 243),
-                                          (0.0, 1, 0.0), (0.0, 2, 0.0), (3.3, 1, 3.3), (3.3, 2, 10.89),
-                                          (3.3, 3, 35.937), (3.3, 5, 391.35393)))
+                                                    (0.0, 1, 0.0), (0.0, 2, 0.0), (3.3, 1, 3.3), (3.3, 2, 10.89),
+                                                    (3.3, 3, 35.937), (3.3, 5, 391.35393)))
 def test_pow_enc_dec(plain, power, expected,
                      poly_mod=8192, coeff_mod=0, plain_mod=1024, security=128, base=2):
     cs = CipherScheme(poly_mod, coeff_mod, plain_mod, security)
