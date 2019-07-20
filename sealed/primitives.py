@@ -1,9 +1,19 @@
+"""
+Primitives
+Python wrappers to pybind11 generated shared objects
+Add Python-native functionality to cpp-originated classes such as pickle, compare and init
+"""
+
 # noinspection PyProtectedMember
 from sealed._primitives import *
 
 
 class SEALContext(SEALContext):
     def __eq__(self, other) -> bool:
+        """
+        SEALContext equality is determined by the underlying SEAL parameters:
+        poly_modulus, coeff_modulus and plain_modulus
+        """
         if (isinstance(other, SEALContext)
                 and self.poly_modulus().coeff_count() == other.poly_modulus().coeff_count()
                 and self.total_coeff_modulus().significant_bit_count() ==
