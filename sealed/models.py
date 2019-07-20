@@ -5,6 +5,7 @@ Main class for sealed Python modules CipherScheme and CipherText
 
 from typing import Union, Tuple
 import logging
+import numpy as np
 
 from sealed.primitives import *
 from sealed.encode import Encoder
@@ -101,9 +102,17 @@ class CipherText:
         return CipherText(self._cipher, self._context, self._encoder)
 
     def __getstate__(self):
+        """
+        Enable picklization by ignoring and recreating cpp-generated properties
+        """
+
         return self._cipher, self._context, self._encoder
 
     def __setstate__(self, state):
+        """
+        Enable picklization by ignoring and recreating cpp-generated properties
+        """
+
         self._cipher, self._context, self._encoder = state
 
         # non-pickelizable properties
@@ -283,6 +292,8 @@ class CipherScheme:
             A small decomposition bit count can make relinearization slower,
             but might not change the noise budget by any observable amount.
         :param eval_keys: M-2 evaluation keys to relinearize a ciphertext of size M >= 2 back to size 2
+        :return: (PublicKey, SecretKey, EvaluationKeys, GaloisKeys)
+            In case context parameters do not allow batching, None is returned instead of GaloisKeys
         """
 
         assert dbc_min() <= dbc <= dbc_max()
@@ -304,7 +315,15 @@ class CipherScheme:
 
         return pk, sk, ek, gk
 
-    def encrypt(self, pk: PublicKey, plain: Union[int, float], **kwargs):
+    def encrypt(self, pk: PublicKey, plain: Union[int, float, np.ndarray], **kwargs):
+        """
+        Encodes and encrypts Python objects
+        :param pk: PublicKey
+        :param plain: Python object
+        :param kwargs: additional arguments to adjust encoding
+        :return: CipherText
+        """
+
         encoded, encoder = Encoder(plain, self._context, **kwargs)
 
         cipher = Ciphertext()
@@ -324,9 +343,17 @@ class CipherScheme:
             return False
 
     def __getstate__(self):
+        """
+        Enable picklization by ignoring and recreating cpp-generated properties
+        """
+
         return self._context
 
     def __setstate__(self, state):
+        """
+        Enable picklization by ignoring and recreating cpp-generated properties
+        """
+
         self._context = state
 
         # non-pickelizable properties
