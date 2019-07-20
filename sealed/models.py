@@ -212,9 +212,39 @@ class CipherText:
 
 
 class CipherScheme:
+    """
+    Main sealed class which holds encryption parameters, generates keys and encrypts Python objects
+    """
+
     def __init__(self,
                  poly_mod_deg: int = 2048, coeff_mod: int = 0,
                  plain_mod: int = 256, security: int = 128):
+        """
+        :param poly_mod_deg: Used to define SEAL polynomial modulus to "1x^poly_mod_deg + 1", must be a power of two.
+            The polynomial modulus should be thought of mainly affecting the security level of the scheme;
+                larger polynomial modulus makes the scheme more secure. At the same time, it
+                makes ciphertext sizes larger, and consequently all operations slower.
+            Recommended degrees for poly_modulus are 1024, 2048, 4096, 8192, 16384, 32768,
+                but it is also possible to go beyond this.
+        :param coeff_mod: Leave as default to use SEAL recommended value.
+            The size of the coefficient modulus should be thought of as the most significant factor
+            in determining the noise budget in a freshly encrypted ciphertext: bigger means
+            more noise budget. Unfortunately, a larger coefficient modulus also lowers the
+            security level of the scheme. Thus, if a large noise budget is required for
+            complicated computations, a large coefficient modulus needs to be used, and the
+            reduction in the security level must be countered by simultaneously increasing
+            the polynomial modulus.
+        :param plain_mod: The plaintext modulus can be any positive integer,
+            but it required to be a prime number for batch operations (using IntMatrixEncoder).
+            The plaintext modulus determines the size of the plaintext data type, but it also affects
+            the noise budget in a freshly encrypted ciphertext, and the consumption of
+            the noise budget in homomorphic multiplication.
+            Thus, it is essential to try to keep the plaintext data type as small as possible for good performance.
+            The noise budget in a freshly encrypted ciphertext is ~ log2(coeff_modulus/plain_modulus) (bits)
+            and the noise budget consumption in a homomorphic multiplication is of the
+            form log2(plain_modulus) + (other terms).
+        :param security: Number of bits used as security parameter. Supported values are 128 and 192.
+        """
 
         try:
             params = EncryptionParameters()
