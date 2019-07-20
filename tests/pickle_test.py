@@ -25,7 +25,7 @@ def test_keys_pickle():
 
 @pytest.mark.parametrize("plain", (7, 7.21, np.ones((2, 2048), int)))
 def test_cipher_pickle(plain, poly_mod=4096, plain_mod=40961, base=2):
-    cs = CipherScheme(poly_mod, plain_mod=plain_mod)
+    cs = CipherScheme(poly_mod, plain_mod)
     pk, sk, _, _ = cs.generate_keys()
 
     e_1 = cs.encrypt(pk, plain, base=base)
@@ -43,7 +43,7 @@ def test_cipher_pickle(plain, poly_mod=4096, plain_mod=40961, base=2):
 # noinspection PyProtectedMember
 @pytest.mark.parametrize("plain", (7, 7.21, np.ones((2, 2048), int)))
 def test_encoder_pickle(plain, poly_mod=4096, plain_mod=40961):
-    context = CipherScheme(poly_mod, plain_mod=plain_mod)._context
+    context = CipherScheme(poly_mod, plain_mod)._context
 
     _, e_1 = Encoder(plain, context)
     e_2 = pickle.loads(pickle.dumps(e_1))

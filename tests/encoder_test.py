@@ -14,7 +14,7 @@ from sealed.models import CipherScheme
                           (int, IntEncoder), (float, FloatEncoder),
                           (np.ndarray, IntMatrixEncoder)])
 def test_encoding_type(plain, encoder_type, poly_mod=4096, plain_mod=40961):
-    cs = CipherScheme(poly_mod, plain_mod=plain_mod)
+    cs = CipherScheme(poly_mod, plain_mod)
     _, encoder = Encoder(plain, cs._context)
 
     assert isinstance(encoder, encoder_type)
@@ -23,7 +23,7 @@ def test_encoding_type(plain, encoder_type, poly_mod=4096, plain_mod=40961):
 # noinspection PyProtectedMember
 @pytest.mark.parametrize("plain, base", product([1.0, 0.0, 1, 0, np.ones((2, 2048), int)], [2, 3]))
 def test_encode_decode(plain, base, poly_mod=4096, plain_mod=40961):
-    cs = CipherScheme(poly_mod, plain_mod=plain_mod)
+    cs = CipherScheme(poly_mod, plain_mod)
     encoded, encoder = Encoder(plain, cs._context, base=base)
 
     if isinstance(plain, np.ndarray):
@@ -35,7 +35,7 @@ def test_encode_decode(plain, base, poly_mod=4096, plain_mod=40961):
 # noinspection PyProtectedMember
 @pytest.mark.parametrize("encoder_type, base", product([float, int, np.ndarray], [2, 3]))
 def test_eq(encoder_type, base, poly_mod=4096, plain_mod=40961):
-    cs = CipherScheme(poly_mod, plain_mod=plain_mod)
+    cs = CipherScheme(poly_mod, plain_mod)
     _, encoder1 = Encoder(encoder_type, cs._context, base=base)
     _, encoder2 = Encoder(encoder_type, cs._context, base=base)
 
