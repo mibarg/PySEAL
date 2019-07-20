@@ -225,7 +225,7 @@ class CipherScheme:
     Main sealed class which holds encryption parameters, generates keys and encrypts Python objects
     """
 
-    def __init__(self, poly_mod_deg: int = 2048, plain_mod: int = 256, coeff_mod: int = 0, security: int = 128):
+    def __init__(self, poly_mod_deg: int = 4096, plain_mod: int = 40961, coeff_mod: int = 0, security: int = 128):
         """
         :param poly_mod_deg: Used to define SEAL polynomial modulus to "1x^poly_mod_deg + 1", must be a power of two.
             The polynomial modulus should be thought of mainly affecting the security level of the scheme;
