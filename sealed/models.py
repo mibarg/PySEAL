@@ -1,3 +1,8 @@
+"""
+Model
+Main class for sealed Python modules CipherScheme and CipherText
+"""
+
 from typing import Union, Tuple
 import logging
 
@@ -7,18 +12,27 @@ from sealed.utils import is_pow_of_two
 
 
 class CipherText:
-    def __init__(self, cipher: Ciphertext, context: SEALContext, encoder: Encoder,
-                 evl: Evaluator = None):
+    """
+    Wrapper class for SEAL Ciphertext
+    Enables homomorphic operations using Python-native syntax
+    """
+
+    def __init__(self,  cipher: Ciphertext,
+                 context: SEALContext, encoder: Encoder):
+        """
+        :param cipher: SEAL Ciphertext
+        :param context: Used to recreate Evaluator when loading from pickle
+        :param encoder: Used to encode and decode plaintext for (cipher, plain) operations,
+        as well as decoding the ciphertext itself
+        """
+
         self._cipher = cipher
 
         self._context = context
         self._encoder = encoder
 
         # non-pickelizable properties
-        self._evl = evl if evl else self._gen_evaluator()
-
-    def _gen_evaluator(self):
-        return Evaluator(self._context)
+        self._evl = Evaluator(self._context)
 
     def __add__(self, other):
         if isinstance(other, CipherText) and self._encoder == other._encoder:
@@ -33,6 +47,10 @@ class CipherText:
             return NotImplemented
 
     def __radd__(self, other):
+        """
+        Handle addition between different types where the second one is CipherText.
+        This allows CipherTexts to be added to plaintext from left or right.
+        """
         return self.__add__(other)
 
     def __neg__(self):
@@ -61,7 +79,7 @@ class CipherText:
 
     def __rmul__(self, other):
         """
-        Handle multiplications between different types where the second one is CipherText.
+        Handle multiplication between different types where the second one is CipherText.
         This allows CipherTexts to be multiplied by plaintext from left or right.
         """
         return self.__mul__(other)
@@ -89,11 +107,18 @@ class CipherText:
         self._cipher, self._context, self._encoder = state
 
         # non-pickelizable properties
-        self._evl = self._gen_evaluator()
+        self._evl = Evaluator(self._context)
 
         return True
 
     def init_new(self, cipher: Ciphertext):
+        """
+        Initiate a new CipherText instance given a SEAL Ciphertext.
+        This method uses self's _context and _encoder to create a new CipherText instance.
+        :param cipher: SEAL Ciphertext
+        :return: CipherText with self's _context and _encoder
+        """
+
         other = self.__copy__()
         other._cipher = cipher
         return other
@@ -102,9 +127,19 @@ class CipherText:
         return self * self
 
     def size(self):
+        """
+        :return: The Ciphertext's current size
+        """
+
         return self._cipher.size()
 
     def decrypt(self, sk: SecretKey):
+        """
+        Decrypt and decode Ciphertext into a plain Python object
+        :param sk: SEAL SecretKey
+        :return: plain Python object
+        """
+
         plain = Plaintext()
         Decryptor(self._context, sk).decrypt(self._cipher, plain)
 
@@ -112,10 +147,24 @@ class CipherText:
         return decoded
 
     def noise_budget(self, sk: SecretKey):
+        """
+        :param sk: SEAL SecretKey
+        :return: The Ciphertext's current noise budget
+        """
+
         dec = Decryptor(self._context, sk)
         return dec.invariant_noise_budget(self._cipher)
 
     def relinearize(self, ek: EvaluationKeys) -> "CipherText":
+        """
+        Relinearization reduces the size of the CipherText after homomorphic operations
+        back to the initial size (2).
+        Thus, relinearizing one or both inputs before the next multiplication,
+        or e.g. before serializing the CipherText, can have a huge positive impact on performance.
+        :param ek: EvaluationKeys
+        :return: relinearized CipherText
+        """
+
         res = Ciphertext()
         self._evl.relinearize(self._cipher, ek, res)
 
@@ -125,6 +174,7 @@ class CipherText:
              shift: Union[int, Tuple[int, int]] = 1,
              axis: int = 0) -> "CipherText":
         """
+        Roll matrix rows or columns, similar to numpy.roll
         :param gk: GaloisKeys
         :param shift: The number of places by which elements are shifted.
             If a tuple, then axis must be a tuple of the same size,
