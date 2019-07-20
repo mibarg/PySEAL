@@ -213,7 +213,7 @@ class CipherText:
 
 class CipherScheme:
     def __init__(self,
-                 poly_mod: int = 2048, coeff_mod: int = 0,
+                 poly_mod_deg: int = 2048, coeff_mod: int = 0,
                  plain_mod: int = 256, security: int = 128):
 
         try:
@@ -223,15 +223,15 @@ class CipherScheme:
             assert security in (128, 192)
 
             # Polynomial modulus
-            assert is_pow_of_two(poly_mod)
-            params.set_poly_modulus("1x^%d + 1" % poly_mod)
+            assert is_pow_of_two(poly_mod_deg)
+            params.set_poly_modulus("1x^%d + 1" % poly_mod_deg)
 
             # Coefficient modulus
             assert isinstance(coeff_mod, int)
             if coeff_mod <= 0:
                 # Automatically choose by SEAL recommendations
                 coeff_mod_func = {128: coeff_modulus_128, 192: coeff_modulus_192}
-                params.set_coeff_modulus(coeff_mod_func[security](poly_mod))
+                params.set_coeff_modulus(coeff_mod_func[security](poly_mod_deg))
             else:
                 params.set_coeff_modulus([SmallModulus(coeff_mod)])
 
