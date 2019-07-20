@@ -29,16 +29,6 @@ before_install:
   - export SEAL=${ROOT}/include
   # Delete SEAL log if exists, to enable caching of SEAL binaries
   - rm -f ${ROOT}/include/SEAL/config.log;
-  # Install PyBind11
-  - if [ ! -d "${ROOT}/include/pybind11" ]; then
-      cd ${ROOT}/include/;
-      git clone https://github.com/pybind/pybind11.git;
-      cd ${ROOT}/include/pybind11;
-      git checkout a303c6fc479662fd53eaa8990dbc65b7de9b7deb;
-    else
-    echo "Found cached PyBind11";
-    fi
-  - export PYBIND11=${ROOT}/include/pybind11
 install:
   # Install Python dependencies
   - cd ${ROOT}

@@ -2,51 +2,53 @@ import os
 from os.path import join
 import sys
 from distutils.core import setup, Extension
-from distutils import sysconfig
+
 
 # Locate SEAL
 if os.path.exists("/usr/local/lib/libseal.a") and os.path.exists("/usr/local/include/seal/"):
-    SEAL_ROOT = None
+    SEAL_INCLUDE = "/usr/local/include/"
+    SEAL_BIN = "/usr/local/lib/libseal.a"
 else:
     if "SEAL" not in os.environ:
         raise ImportError("Couldn't find SEAL in /usr/local/ or environment variables. "
                           "Please install Microsoft SEAL (https://github.com/microsoft/SEAL) "
                           "and point environment variable SEAL to its root.")
-    SEAL_ROOT = os.environ["SEAL"]
+    SEAL_INCLUDE = join(os.environ["SEAL"], 'SEAL')
+    SEAL_BIN = join(os.environ["SEAL"], 'bin/libseal.a')
 
-# Locate pybind11
-if "PYBIND11" not in os.environ:
-    raise ImportError("Couldn't find pybind11 in environment variables. "
-                      "Please install pybind11 (https://github.com/pybind/pybind11) "
-                      "and point environment variable PYBIND11 to its root.")
-PYBIND11_ROOT = os.environ["PYBIND11"]
 
-# Remove strict-prototypes compiler flag
-cfg_vars = sysconfig.get_config_vars()
-for key, value in cfg_vars.items():
-    if type(value) == str:
-        cfg_vars[key] = value.replace('-Wstrict-prototypes', '')
+def get_includes():
 
-PY_INCLUDE = join(sys.prefix, "include/site/python%d.%d" % sys.version_info[:2])
+    includes = []
+
+    import pybind11
+    includes.append(pybind11.get_include(True))
+    includes.append(pybind11.get_include(False))
+
+    includes.append(join(sys.prefix, "include/site/python%d.%d" % sys.version_info[:2]))
+
+    includes.append(SEAL_INCLUDE)
+
+    return includes
+
 
 ext_modules = [
     Extension(
         '_primitives',
         ['sealed/cpp/wrapper.cpp'],
-        include_dirs=['/usr/include/python3', PY_INCLUDE, os.path.join(PYBIND11_ROOT, 'include')] +
-                     [join(SEAL_ROOT, 'SEAL') if SEAL_ROOT else ''],
+        include_dirs=get_includes(),
         language='c++',
         extra_compile_args=['-std=c++11'],
-        extra_objects=[join(SEAL_ROOT, 'bin/libseal.a') if SEAL_ROOT else ''],
+        extra_objects=[SEAL_BIN],
     ),
 ]
 
 setup(
     name='sealed',
-    version='2.3',
-    author='Todd Stavish, Shashwat Kishore',
-    author_email='toddstavish@gmail.com',
-    description='Python wrapper for SEAL',
+    version='0.0.1',
+    author='Mibarg, Todd Stavish, Shashwat Kishore',
+    author_email='mibarg@users.noreply.github.com',
+    description='Python-native homomorphic encryption based on SEAL',
     ext_modules=ext_modules,
     package_dir={'': 'sealed'},
 )

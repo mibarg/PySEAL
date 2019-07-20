@@ -18,7 +18,7 @@ elif [[ $2 = "run" ]]; then
 elif [[ $2 = "exec" ]]; then
     docker run -it $1 $3
 elif [[ $2 = "test" ]]; then
-    docker run -it $1 python3 -m pytest PySeal/tests/$3
+    docker run -it $1 python3 -m pytest sealed/tests/$3
 else
   echo "Incorrect command argument. Choices: build, run, test"
 fi
