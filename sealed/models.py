@@ -104,6 +104,62 @@ class CipherText:
     def size(self):
         return self._cipher.size()
 
+    def decrypt(self, sk: SecretKey):
+        plain = Plaintext()
+        Decryptor(self._context, sk).decrypt(self._cipher, plain)
+
+        decoded = self._encoder.decode(plain)
+        return decoded
+
+    def noise_budget(self, sk: SecretKey):
+        dec = Decryptor(self._context, sk)
+        return dec.invariant_noise_budget(self._cipher)
+
+    def relinearize(self, ek: EvaluationKeys) -> "CipherText":
+        res = Ciphertext()
+        self._evl.relinearize(self._cipher, ek, res)
+
+        return self.init_new(res)
+
+    def roll(self, gk: GaloisKeys,
+             shift: Union[int, Tuple[int, int]] = 1,
+             axis: int = 0) -> "CipherText":
+        """
+        :param gk: GaloisKeys
+        :param shift: The number of places by which elements are shifted.
+            If a tuple, then axis must be a tuple of the same size,
+            and each of the given axes is shifted by the corresponding number.
+            If an int while axis is a tuple of ints, then the same value is used for all given axes.
+        :param axis: Which way to rotate, rows or columns. Used only when shift is an int.
+        """
+
+        assert isinstance(axis, int) and 0 <= axis <= 1, "axis must be 0 or 1, provided %s" % axis
+
+        if isinstance(shift, tuple):
+            if shift[0] == 0:
+                return self.roll(gk, shift[1], 1)
+            elif shift[1] == 0:
+                return self.roll(gk, shift[0], 0)
+            else:
+                rolled_rows = self.roll(gk, shift[0], 0)
+                return rolled_rows.roll(gk, shift[1], 1)
+
+        # From here we can assume shift is an int
+
+        if axis == 0 and shift not in (-1, 0, 1):
+            # TODO support more than 1 step rotations
+            raise TypeError("Only 1 step rotation is supported for row rotation.")
+
+        res = Ciphertext()
+        # It seems like SEAL rotations are flipped (columns to rows and rows to columns).
+        # We flip them to work like standard numpy dimensions
+        if axis == 0:
+            self._evl.rotate_columns(self._cipher, gk, res)
+        else:
+            self._evl.rotate_rows(self._cipher, -shift, gk, res)
+
+        return self.init_new(res)
+
 
 class CipherScheme:
     def __init__(self,
@@ -141,10 +197,34 @@ class CipherScheme:
         except AssertionError as e:
             raise ValueError("Illegal parameters, %s" % e)
 
-    def generate_keys(self):
+    def generate_keys(self, dbc: int = 16, eval_keys: int = 1) \
+            -> Tuple[PublicKey, SecretKey, EvaluationKeys, Union[GaloisKeys, None]]:
+        """
+        :param dbc: decomposition bit count, any integer at least 1 [dbc_min()] and at most 60 [dbc_max()]
+            A large decomposition bit count makes relinearization fast, but consumes more noise budget.
+            A small decomposition bit count can make relinearization slower,
+            but might not change the noise budget by any observable amount.
+        :param eval_keys: M-2 evaluation keys to relinearize a ciphertext of size M >= 2 back to size 2
+        """
+
+        assert dbc_min() <= dbc <= dbc_max()
+        assert eval_keys > 0
+
         pk = self._keygen.public_key()
         sk = self._keygen.secret_key()
-        return pk, sk
+
+        ek = EvaluationKeys()
+        self._keygen.generate_evaluation_keys(dbc, eval_keys, ek)
+
+        try:
+            gk = GaloisKeys()
+            self._keygen.generate_galois_keys(dbc, gk)
+        except RuntimeError as e:
+            if str(e) != "encryption parameters are not valid for batching":
+                raise
+            gk = None
+
+        return pk, sk, ek, gk
 
     def encrypt(self, pk: PublicKey, plain: Union[int, float], **kwargs):
         encoded, encoder = Encoder(plain, self._context, **kwargs)
@@ -153,91 +233,6 @@ class CipherScheme:
         Encryptor(self._context, pk).encrypt(encoded, cipher)
 
         return CipherText(cipher, self._context, encoder)
-
-    # noinspection PyProtectedMember
-    def decrypt(self, sk: SecretKey, cipher: CipherText):
-        plain = Plaintext()
-        Decryptor(self._context, sk).decrypt(cipher._cipher, plain)
-
-        decoded = cipher._encoder.decode(plain)
-        return decoded
-
-    # noinspection PyProtectedMember
-    def noise_budget(self, sk: SecretKey, cipher: CipherText):
-        dec = Decryptor(self._context, sk)
-        return dec.invariant_noise_budget(cipher._cipher)
-
-    # noinspection PyProtectedMember
-    def relinearize(self, cipher: CipherText, dbc: int = 16) -> CipherText:
-        """
-        :param cipher: CipherText
-        :param dbc: decomposition bit count, any integer at least 1 [dbc_min()] and at most 60 [dbc_max()]
-            A large decomposition bit count makes relinearization fast, but consumes more noise budget.
-            A small decomposition bit count can make relinearization slower,
-            but might not change the noise budget by any observable amount.
-        """
-
-        assert dbc_min() <= dbc <= dbc_max()
-
-        # M-2 evaluation keys to relinearize a ciphertext of size M >= 2 back to size 2
-        num_keys = max(cipher.size() - 2, 1)
-
-        ek = EvaluationKeys()
-        self._keygen.generate_evaluation_keys(dbc, num_keys, ek)
-
-        res = Ciphertext()
-        self._evl.relinearize(cipher._cipher, ek, res)
-
-        return cipher.init_new(res)
-
-    # noinspection PyProtectedMember
-    def roll(self, cipher: CipherText,
-             shift: Union[int, Tuple[int, int]] = 1,
-             axis: int = 0,
-             dbc: int = 16) -> CipherText:
-        """
-        :param cipher: CipherText
-        :param shift: The number of places by which elements are shifted.
-            If a tuple, then axis must be a tuple of the same size,
-            and each of the given axes is shifted by the corresponding number.
-            If an int while axis is a tuple of ints, then the same value is used for all given axes.
-        :param axis: Which way to rotate, rows or columns. Used only when shift is an int.
-        :param dbc: decomposition bit count, any integer at least 1 [dbc_min()] and at most 60 [dbc_max()]
-            A large decomposition bit count makes relinearization fast, but consumes more noise budget.
-            A small decomposition bit count can make relinearization slower,
-            but might not change the noise budget by any observable amount.
-        """
-
-        assert dbc_min() <= dbc <= dbc_max()
-        assert isinstance(axis, int) and 0 <= axis <= 1, "axis must be 0 or 1, provided %s" % axis
-
-        if isinstance(shift, tuple):
-            if shift[0] == 0:
-                return self.roll(cipher, shift[1], 1, dbc)
-            elif shift[1] == 0:
-                return self.roll(cipher, shift[0], 0, dbc)
-            else:
-                rolled_rows = self.roll(cipher, shift[0], 0, dbc)
-                return self.roll(rolled_rows, shift[1], 1, dbc)
-
-        # From here we can assume shift is an int
-
-        if axis == 0 and shift not in (-1, 0, 1):
-            # TODO support more than 1 step rotations
-            raise TypeError("Only 1 step rotation is supported for row rotation.")
-
-        gk = GaloisKeys()
-        self._keygen.generate_galois_keys(dbc, gk)
-
-        res = Ciphertext()
-        # It seems like SEAL rotations are flipped (columns to rows and rows to columns).
-        # We flip them to work like standard numpy dimensions
-        if axis == 0:
-            self._evl.rotate_columns(cipher._cipher, gk, res)
-        else:
-            self._evl.rotate_rows(cipher._cipher, -shift, gk, res)
-
-        return cipher.init_new(res)
 
     def __str__(self) -> str:
         return "CipherScheme(poly_mod={}, coeff_mod_size={} bits, plain_mod={}, noise_std={})".format(
