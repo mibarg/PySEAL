@@ -1,3 +1,8 @@
+"""
+Encode
+Classes to encode and decode standard Python objects to SEAL Plaintext
+"""
+
 from typing import Union, Tuple, Type
 import numpy as np
 from sympy import isprime
@@ -6,18 +11,31 @@ from sealed.primitives import *
 
 
 class Encoder:
-    # TODO support matrices (PolyCRTBuilder)
+    """
+    Wrapper class for all encoders
+    Defines Encoder interface and offers automatic initiation of the right encoder class for each Python object
+    """
 
-    # used for object comparison
+    # used for object comparison and picklization
     _ATTRIBUTES = {}
 
     def __init__(self, *args, **kwargs):
+        """
+        Implemented by each encoder class
+        """
         raise NotImplementedError
 
     def __new__(cls,
                 plain: Union[int, float, np.ndarray, Type[int], Type[float], Type[np.ndarray]],
                 context: SEALContext,
                 **kwargs) -> Tuple[Union[None, Plaintext], "Encoder"]:
+        """
+        Detects and initiates the right encoder class for Python object provided in plain
+        :param plain: Python object or object type to encode
+        :param context: SEALContext
+        :param kwargs: additional argument passed to the selected encoder class
+        :return: encoder instance
+        """
 
         # numpy test must be first because comparison is calculated element-wise on int, float
         if isinstance(plain, np.ndarray) or plain == np.ndarray:
@@ -38,12 +56,22 @@ class Encoder:
         raise NotImplementedError("Encoder supports only int, float or np.ndarray.")
 
     def encode(self, plain) -> Plaintext:
+        """
+        Implemented by each encoder class
+        """
         raise NotImplementedError
 
     def decode(self, encoded: Plaintext):
+        """
+        Implemented by each encoder class
+        """
         raise NotImplementedError
 
     def can_encode(self, plain) -> bool:
+        """
+        :param plain: Python object to encode
+        :return: whether or not an encoder instance can encode this Python object
+        """
         try:
             _ = self.encode(plain)
         except TypeError:
@@ -52,6 +80,9 @@ class Encoder:
             return True
 
     def __eq__(self, other):
+        """
+        Two encoder instances are equal if they are of the same class, and share all additional properties
+        """
         if (isinstance(other, self.__class__)
                 and all((getattr(self, attr) == getattr(other, attr) for attr in self._ATTRIBUTES))):
             return True
@@ -59,9 +90,15 @@ class Encoder:
             return False
 
     def __getstate__(self):
+        """
+        Enable picklization by ignoring and recreating cpp-generated properties
+        """
         return [getattr(self, attr) for attr in self._ATTRIBUTES]
 
     def __setstate__(self, state):
+        """
+        Enable picklization by ignoring and recreating cpp-generated properties
+        """
         attrs = dict(zip(self._ATTRIBUTES, state))
 
         for attr, val in attrs.items():
@@ -111,6 +148,12 @@ class IntEncoder(IntegerEncoder, Encoder):
         self._unsigned = unsigned
 
     def encode(self, plain: int) -> Plaintext:
+        """
+        Encodes int as SEAL Plaintext
+        :param plain: int
+        :return: SEAL Plaintext
+        """
+
         if not isinstance(plain, int):
             raise TypeError("IntEncoder cannot encode %s." % type(plain))
         if self._unsigned and plain < 0:
@@ -118,6 +161,12 @@ class IntEncoder(IntegerEncoder, Encoder):
         return super().encode(plain)
 
     def decode(self, encoded: Plaintext):
+        """
+        Decodes SEAL Plaintext to Python int
+        :param encoded: SEAL Plaintext
+        :return: float
+        """
+
         if self._unsigned:
             return super().decode_uint64(encoded)
         else:
@@ -188,12 +237,24 @@ class FloatEncoder(FractionalEncoder, Encoder):
         self._base = base
 
     def encode(self, plain: float) -> Plaintext:
+        """
+        Encodes float as SEAL Plaintext
+        :param plain: float
+        :return: SEAL Plaintext
+        """
+
         if not isinstance(plain, float):
             raise TypeError("FloatEncoder cannot encode %s." % type(plain))
         return super().encode(plain)
 
     # noinspection PyMethodOverriding
     def decode(self, encoded: Plaintext):
+        """
+        Decodes SEAL Plaintext to Python float
+        :param encoded: SEAL Plaintext
+        :return: float
+        """
+
         return super().decode(encoded)
 
 
@@ -238,6 +299,12 @@ class IntMatrixEncoder(PolyCRTBuilder, Encoder):
         self._cols = cols
 
     def encode(self, plain: np.ndarray) -> Plaintext:
+        """
+        Encodes integer matrices as SEAL Plaintext
+        :param plain: integer np.ndarray with two dimensions, whose multiplication equals context.poly_mod_degree
+        :return: SEAL Plaintext
+        """
+
         if (isinstance(plain, np.ndarray)
                 and len(plain.shape) == 2
                 and plain.dtype == np.dtype(int)):
@@ -271,8 +338,11 @@ class IntMatrixEncoder(PolyCRTBuilder, Encoder):
 
     # noinspection PyMethodOverriding
     def decode(self, encoded: Plaintext):
-        # WARNING: this function currently has the side affect of decomposing 'encoded'
-        # TODO deal with side affect
+        """
+        Decodes SEAL Plaintext to Numpy ndarray
+        :param encoded: SEAL Plaintext
+        :return: np.ndarray with two dimensions, of shape (self._rows, self._cols)
+        """
 
         # Plaintext to list
         self.decompose(encoded)
