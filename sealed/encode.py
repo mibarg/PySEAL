@@ -278,7 +278,10 @@ class IntMatrixEncoder(PolyCRTBuilder, Encoder):
         self.decompose(encoded)
         plain_list = [encoded.coeff_at(i) for i in range(encoded.coeff_count())]
 
-        # list to numpy
+        # Undo side-affects so encoded is left unchanged
+        self.compose(encoded)
+
+        # List to numpy
         plain = np.asarray(plain_list).reshape((self._rows, self._cols))
 
         return plain
