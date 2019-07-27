@@ -19,6 +19,9 @@ elif [[ $2 = "exec" ]]; then
     docker run -it $1 $3
 elif [[ $2 = "test" ]]; then
     docker run -it $1 python3 -m pytest sealed/tests/$3
+elif [[ $2 = "clean" && $1 = "all" ]]; then
+    docker rm $(docker ps -a -q)
+    docker rmi $(docker images -q)
 else
-  echo "Incorrect command argument. Choices: build, run, test"
+  echo "Incorrect command argument. Choices: build, run, exev, test, clean"
 fi

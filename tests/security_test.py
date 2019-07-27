@@ -30,8 +30,7 @@ def test_different_keygen_same_context(plain=1):
     Using two different KeyGenerators generate non-matching keys
     """
     cs = CipherScheme()
-    # noinspection PyProtectedMember
-    context = cs._context
+    context = cs.context
 
     key_gen_1 = KeyGenerator(context)
     key_gen_2 = KeyGenerator(context)
@@ -68,7 +67,7 @@ def different_context(second_context, plain=1):
         context = cipher._context
 
         cs_2 = CipherScheme()
-        cs_2._context = context
+        cs_2.context = context
         cs_2._keygen = KeyGenerator(context)
         cs_2._evl = Evaluator(context)
     elif second_context == "from_encoder":
@@ -78,7 +77,7 @@ def different_context(second_context, plain=1):
         context = cipher._encoder._context
 
         cs_2 = CipherScheme()
-        cs_2._context = context
+        cs_2.context = context
         cs_2._keygen = KeyGenerator(context)
         cs_2._evl = Evaluator(context)
     else:

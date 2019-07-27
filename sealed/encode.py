@@ -284,12 +284,13 @@ class IntMatrixEncoder(PolyCRTBuilder, Encoder):
         n = context.poly_mod_deg()
         t = context.plain_modulus().value()
         if not (isprime(t) and t % (2 * n) == 1):
-            raise TypeError("Batching requires that plain_mod degree be prime and congruent to 1 modulo 2 * poly_mod.")
+            raise TypeError("Batching requires that plain_mod degree be prime and congruent to 1 modulo 2 * poly_mod, "
+                            "got poly_mod_deg=%d, plain_modulus=%d" % (n, t))
 
         # In case rows and cols were not provided (i.e. zero), they will be lazy evaluated at first encode() call
         if rows > 0 and cols > 0:
             # Matrix size should align with poly_mod_deg
-            if not rows * cols == self._context.poly_mod_deg():
+            if not rows * cols == context.poly_mod_deg():
                 raise TypeError("matrix rows * cols must equal poly_mod.")
 
         super().__init__(context)

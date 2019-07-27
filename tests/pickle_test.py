@@ -40,10 +40,9 @@ def test_cipher_pickle(plain, poly_mod=4096, plain_mod=40961, base=2):
     assert e_1._encoder == e_1._encoder
 
 
-# noinspection PyProtectedMember
 @pytest.mark.parametrize("plain", (7, 7.21, np.ones((2, 2048), int)))
 def test_encoder_pickle(plain, poly_mod=4096, plain_mod=40961):
-    context = CipherScheme(poly_mod, plain_mod)._context
+    context = CipherScheme(poly_mod, plain_mod).context
 
     _, e_1 = Encoder(plain, context)
     e_2 = pickle.loads(pickle.dumps(e_1))

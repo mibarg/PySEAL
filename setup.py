@@ -1,6 +1,4 @@
 import os
-from os.path import join
-import sys
 from distutils.core import setup, Extension
 
 
@@ -13,19 +11,22 @@ else:
         raise ImportError("Couldn't find SEAL in /usr/local/ or environment variables. "
                           "Please install Microsoft SEAL (https://github.com/microsoft/SEAL) "
                           "and point environment variable SEAL to its root.")
-    SEAL_INCLUDE = join(os.environ["SEAL"], 'SEAL')
-    SEAL_BIN = join(os.environ["SEAL"], 'bin/libseal.a')
+    SEAL_INCLUDE = os.path.join(os.environ["SEAL"], 'SEAL')
+    SEAL_BIN = os.path.join(os.environ["SEAL"], 'bin/libseal.a')
 
 
 def get_includes():
 
     includes = []
 
+    # PyBind11
     import pybind11
     includes.append(pybind11.get_include(True))
     includes.append(pybind11.get_include(False))
 
-    includes.append(join(sys.prefix, "include/site/python%d.%d" % sys.version_info[:2]))
+    # Python include dir
+    from sysconfig import get_paths
+    includes.append(get_paths().get("include"))
 
     includes.append(SEAL_INCLUDE)
 

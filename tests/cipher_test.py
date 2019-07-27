@@ -1,6 +1,7 @@
 import pytest
 
 from sealed.models import CipherScheme
+from sealed.encode import Encoder
 
 
 @pytest.mark.parametrize("coeff_mod, plain_mod",
@@ -95,6 +96,22 @@ def test_add_plain_enc_dec(plain,
     assert abs(expected - cipher_2.decrypt(sk)) <= 0.5
 
 
+@pytest.mark.parametrize("plain", (0, 1, 3, 0.0, 1.1, 3.3, 6.6))
+def test_add_encoded_plain_enc_dec(plain,
+                                   poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
+    cs = CipherScheme(poly_mod, plain_mod, coeff_mod, security)
+    pk, sk, _, _ = cs.generate_keys()
+
+    encoded, encoder = Encoder(plain, cs.context, base=base)
+
+    cipher_1 = cs.encrypt(pk, plain, base=base)
+    cipher_2 = encoded + cipher_1
+
+    expected = plain + plain
+
+    assert abs(expected - cipher_2.decrypt(sk)) <= 0.5
+
+
 @pytest.mark.parametrize("plain", (0, 1, 3, 0.0, 1.1, 3.3))
 def test_neg_enc_dec(plain, poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
     cs = CipherScheme(poly_mod, plain_mod, coeff_mod, security)
@@ -130,7 +147,27 @@ def test_mul_by_plain_enc_dec(plain_1, plain_2,
     cipher_1 = cs.encrypt(pk, plain_1, base=base)
     cipher_2 = cipher_1 * plain_2
 
-    assert abs((plain_1 * plain_2) - cipher_2.decrypt(sk)) <= 0.5
+    expected = plain_1 * plain_2
+
+    assert abs(expected - cipher_2.decrypt(sk)) <= 0.5
+
+
+@pytest.mark.parametrize("plain_1, plain_2",
+                         ((1.0, 1.0), (-1.0, 1.0), (3.3, 3.3), (7.0, 0.1),
+                          (1, 1), (-1, 1), (3, 3), (7, 1)))
+def test_mul_by_encoded_plain_enc_dec(plain_1, plain_2,
+                                      poly_mod=2048, coeff_mod=0, plain_mod=256, security=128, base=2):
+    cs = CipherScheme(poly_mod, plain_mod, coeff_mod, security)
+    pk, sk, _, _ = cs.generate_keys()
+
+    encoded, encoder = Encoder(plain_2, cs.context, base=base)
+
+    cipher_1 = cs.encrypt(pk, plain_1, base=base)
+    cipher_2 = cipher_1 * encoded
+
+    expected = plain_1 * plain_2
+
+    assert abs(expected - cipher_2.decrypt(sk)) <= 0.5
 
 
 @pytest.mark.parametrize("plain, power, expected", ((0, 1, 0), (0, 2, 0), (3, 1, 3), (3, 2, 9), (3, 3, 27), (3, 5, 243),

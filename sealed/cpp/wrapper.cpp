@@ -218,6 +218,7 @@ PYBIND11_MODULE(_primitives, m) {
     .def(py::init<const EncryptionParameters &>())
     .def("plain_modulus", &EncryptionParameters::plain_modulus, "Returns the plaintext modulus")
     .def("poly_modulus", &EncryptionParameters::poly_modulus, "Returns the polynomial modulus")
+    .def("coeff_modulus", &EncryptionParameters::coeff_modulus, "Returns the polynomial modulus")
     .def("set_coeff_modulus",
         (void (EncryptionParameters::*)(const std::vector<SmallModulus> &)) &EncryptionParameters::set_coeff_modulus,
         "Set coefficient modulus parameter")

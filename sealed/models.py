@@ -40,6 +40,10 @@ class CipherText:
             res = Ciphertext()
             self._evl.add(self._cipher, other._cipher, res)
             return self.init_new(res)
+        elif isinstance(other, Plaintext):
+            res = Ciphertext()
+            self._evl.add_plain(self._cipher, other, res)
+            return self.init_new(res)
         elif self._encoder.can_encode(other):
             res = Ciphertext()
             self._evl.add_plain(self._cipher, self._encoder.encode(other), res)
@@ -70,6 +74,10 @@ class CipherText:
         if isinstance(other, CipherText) and self._encoder == other._encoder:
             res = Ciphertext()
             self._evl.multiply(self._cipher, other._cipher, res)
+            return self.init_new(res)
+        elif isinstance(other, Plaintext):
+            res = Ciphertext()
+            self._evl.multiply_plain(self._cipher, other, res)
             return self.init_new(res)
         elif self._encoder.can_encode(other) and other is not 0 and other is not 0.0:
             res = Ciphertext()
@@ -276,11 +284,12 @@ class CipherScheme:
             assert isinstance(plain_mod, int)
             params.set_plain_modulus(plain_mod)
 
-            self._context = SEALContext(params)
+            self._params = params
+            self.context = SEALContext(params)
 
             # non-pickelizable properties
-            self._keygen = KeyGenerator(self._context)
-            self._evl = Evaluator(self._context)
+            self._keygen = KeyGenerator(self.context)
+            self._evl = Evaluator(self.context)
         except AssertionError as e:
             raise ValueError("Illegal parameters, %s" % e)
 
@@ -324,20 +333,20 @@ class CipherScheme:
         :return: CipherText
         """
 
-        encoded, encoder = Encoder(plain, self._context, **kwargs)
+        encoded, encoder = Encoder(plain, self.context, **kwargs)
 
         cipher = Ciphertext()
-        Encryptor(self._context, pk).encrypt(encoded, cipher)
+        Encryptor(self.context, pk).encrypt(encoded, cipher)
 
-        return CipherText(cipher, self._context, encoder)
+        return CipherText(cipher, self.context, encoder)
 
     def __str__(self) -> str:
         return "CipherScheme(poly_mod={}, coeff_mod_size={} bits, plain_mod={}, noise_std={})".format(
-            self._context.poly_modulus().coeff_count(), self._context.total_coeff_modulus().significant_bit_count(),
-            self._context.plain_modulus().value(), self._context.noise_standard_deviation())
+            self.context.poly_modulus().coeff_count(), self.context.total_coeff_modulus().significant_bit_count(),
+            self.context.plain_modulus().value(), self.context.noise_standard_deviation())
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, CipherScheme) and self._context == other._context:
+        if isinstance(other, CipherScheme) and self.context == other.context:
             return True
         else:
             return False
@@ -347,15 +356,38 @@ class CipherScheme:
         Enable picklization by ignoring and recreating cpp-generated properties
         """
 
-        return self._context
+        return self._params, self.context
 
     def __setstate__(self, state):
         """
         Enable picklization by ignoring and recreating cpp-generated properties
         """
 
-        self._context = state
+        self._params, self.context = state
 
         # non-pickelizable properties
-        self._keygen = KeyGenerator(self._context)
-        self._evl = Evaluator(self._context)
+        self._keygen = KeyGenerator(self.context)
+        self._evl = Evaluator(self.context)
+
+    @property
+    def coeff_modulus(self) -> Tuple[int, int]:
+        """
+        :return: the two prime numbers used is coeff modulus by SEAL parameters
+        """
+        p1, p2 = (m.value() for m in self._params.coeff_modulus())
+
+        return p1, p2
+
+    @property
+    def plain_modulus(self) -> int:
+        """
+        :return: the plaintext modulus by SEAL parameters
+        """
+        return self.context.plain_modulus().value()
+
+    @property
+    def poly_mod_deg(self) -> int:
+        """
+        :return: degree of polynomial modulus used by SEAL parameters
+        """
+        return self.context.poly_mod_deg()
