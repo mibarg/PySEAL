@@ -370,13 +370,11 @@ class CipherScheme:
         self._evl = Evaluator(self.context)
 
     @property
-    def coeff_modulus(self) -> Tuple[int, int]:
+    def coeff_modulus(self) -> int:
         """
         :return: the two prime numbers used is coeff modulus by SEAL parameters
         """
-        p1, p2 = (m.value() for m in self._params.coeff_modulus())
-
-        return p1, p2
+        return sum((m.value() for m in self._params.coeff_modulus()))
 
     @property
     def plain_modulus(self) -> int:
