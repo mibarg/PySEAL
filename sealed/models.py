@@ -293,34 +293,38 @@ class CipherScheme:
         except AssertionError as e:
             raise ValueError("Illegal parameters, %s" % e)
 
-    def generate_keys(self, dbc: int = 16, eval_keys: int = 1) \
-            -> Tuple[PublicKey, SecretKey, EvaluationKeys, Union[GaloisKeys, None]]:
+    def generate_keys(self, dbc: int = 16, eval_keys: int = 1, gal_keys: bool = True) \
+            -> Tuple[PublicKey, SecretKey, Union[EvaluationKeys, None], Union[GaloisKeys, None]]:
         """
         :param dbc: decomposition bit count, any integer at least 1 [dbc_min()] and at most 60 [dbc_max()]
             A large decomposition bit count makes relinearization fast, but consumes more noise budget.
             A small decomposition bit count can make relinearization slower,
             but might not change the noise budget by any observable amount.
         :param eval_keys: M-2 evaluation keys to relinearize a ciphertext of size M >= 2 back to size 2
+        :param gal_keys: whether or not to generate GaloisKeys
         :return: (PublicKey, SecretKey, EvaluationKeys, GaloisKeys)
             In case context parameters do not allow batching, None is returned instead of GaloisKeys
         """
 
         assert dbc_min() <= dbc <= dbc_max()
-        assert eval_keys > 0
+        assert eval_keys >= 0
 
         pk = self._keygen.public_key()
         sk = self._keygen.secret_key()
 
-        ek = EvaluationKeys()
-        self._keygen.generate_evaluation_keys(dbc, eval_keys, ek)
+        ek, gk = None, None
 
-        try:
-            gk = GaloisKeys()
-            self._keygen.generate_galois_keys(dbc, gk)
-        except RuntimeError as e:
-            if str(e) != "encryption parameters are not valid for batching":
-                raise
-            gk = None
+        if eval_keys > 0:
+            ek = EvaluationKeys()
+            self._keygen.generate_evaluation_keys(dbc, eval_keys, ek)
+
+        if gal_keys:
+            try:
+                gk = GaloisKeys()
+                self._keygen.generate_galois_keys(dbc, gk)
+            except RuntimeError as e:
+                if str(e) != "encryption parameters are not valid for batching":
+                    raise
 
         return pk, sk, ek, gk
 
