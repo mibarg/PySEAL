@@ -50,8 +50,8 @@ docker build -t sealed-container-name -f deploy/Dockerfile .
 
 ## Other platforms
 
-`sealed` is built on top of Microsoft SEAL v2.3. Therefore, you need to install in order for `sealedz` to function.
-Microsoft SEAL v2.3 sources are available in the `/include` dir.
+`sealed` is built on top of Microsoft SEAL v2.3. Therefore, you need to install in order for `sealed` to function.
+Microsoft SEAL v2.3 sources are available in the [include](/include) dir.
 
 To install `sealed` on other platforms, follow the following steps:
 - Build Microsoft SEAL v2.3 (requires CMake (>= 3.10), GNU G++ (>= 6.0) or Clang++ (>= 5.0) and Xcode toolchain (>= 9.3) in macOS)
@@ -59,4 +59,4 @@ To install `sealed` on other platforms, follow the following steps:
 - Install `sealed` using `pip3 install sealed`
 
 # Acknowledgments
-`sealed` was inspired by and uses large parts of the CPP wrapper for SEAL built by [PySEAL](https://github.com/Lab41/PySEAL).
+`sealed` was inspired by and uses large parts of the CPP wrapper for SEAL developed by [PySEAL](https://github.com/Lab41/PySEAL).
