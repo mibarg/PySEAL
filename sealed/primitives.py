@@ -5,7 +5,7 @@ Add Python-native functionality to cpp-originated classes such as pickle, compar
 """
 
 # noinspection PyProtectedMember
-from sealed._primitives import *
+from _seal_primitives import *
 
 
 class SEALContext(SEALContext):

@@ -14,29 +14,16 @@ before_install:
   # Prerequisites
   - sudo apt-get -qqy update
   - sudo apt-get install -qqy g++ make sudo libdpkg-perl --no-install-recommends
-  # Build SEAL libraries
-  - if [ ! -d "${ROOT}/include/SEAL/bin" ]; then
-      cd ${ROOT}/include/SEAL;
-      chmod +x configure;
-      sed -i -e 's/\r$//' configure;
-      ./configure;
-      make;
-    else
-      echo "Found cached SEAL";
-    fi
-  - export LD_LIBRARY_PATH=${ROOT}/include/SEAL/bin:${LD_LIBRARY_PATH}
-  - export SEAL=${ROOT}/include
-  # Delete SEAL log if exists, to enable caching of SEAL binaries
-  - rm -f ${ROOT}/include/SEAL/config.log;
 install:
   # Install Python dependencies
   - cd ${ROOT}
   - pip install --upgrade pip
+  - pip install -U setuptools
   - pip install -r requirements.txt
 script:
   # Install sealed
   - cd ${ROOT}
-  - python setup.py build_ext -i
+  - pip install . --install-option="--build-seal"
   - export PYTHONPATH=${PYTHONPATH}:${ROOT}:${SEAL}/bin
   # Run tests
   - python -m pytest tests/

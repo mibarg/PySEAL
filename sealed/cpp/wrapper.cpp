@@ -49,7 +49,7 @@ T deserialize(py::tuple t) {
     return c;
 }
 
-PYBIND11_MODULE(_primitives, m) {
+PYBIND11_MODULE(_seal_primitives, m) {
 
   py::class_<BigPoly>(m, "BigPoly")
     .def(py::init<>())
