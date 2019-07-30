@@ -1,6 +1,10 @@
 [![Build Status](https://travis-ci.com/mibarg/sealed.svg?token=YtpyWjLrpzZ5G11Nfbjk&branch=master)](https://travis-ci.com/mibarg/sealed)
 
-Short example:
+`sealed` is a Python-native homomorphic encryption library based on Microsoft SEAL v2.3.
+
+By Python-native, we mean that it enables using homomorphic operations on CipherText using familiar Python syntax such as + and *.
+
+Here is a short example:
 
 ```python
 from sealed import CipherScheme
@@ -23,3 +27,37 @@ res = cipher_res.decrypt(sk)
 print("Dec[4.4 * Enc[%s] + Enc[%s] ** 3] = %s" % (secret_1, secret_2, res))
 # >> Dec[4.4 * Enc[1.0] + Enc[2.0] ** 3] = 12.4
 ```
+
+# Install
+
+`sealed` is available for Python version >= 3.5.
+
+## Easiest options
+
+`sealed` support automatic build of dependencies for Linux through a pip command, or through Docker via Dockerfile.
+
+On Linux:
+
+```bash
+pip3 install sealed --install-option="--build-seal"
+```
+
+Docker:
+
+```bash
+git clone https://github.com/mibarg/sealed
+docker build -t sealed-container-name -f deploy/Dockerfile .
+```
+
+## Other platforms
+
+`sealed` is built on top of Microsoft SEAL v2.3. Therefore, you need to install in order for `sealedz` to function.
+Microsoft SEAL v2.3 sources are available in the `/include` dir.
+
+To install `sealed` on other platforms, follow the following steps:
+- Build Microsoft SEAL v2.3 (requires CMake (>= 3.10), GNU G++ (>= 6.0) or Clang++ (>= 5.0) and Xcode toolchain (>= 9.3) in macOS)
+- Point environment variable _SEAL_ to the newly built library root
+- Install `sealed` using `pip3 install sealed`
+
+# Acknowledgments
+`sealed` was inspired by and uses large parts of the CPP wrapper for SEAL built by [PySEAL](https://github.com/Lab41/PySEAL).
