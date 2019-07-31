@@ -11,11 +11,18 @@ from distutils.core import setup, Extension
 from distutils.command.install import install
 from distutils.command.build_ext import build_ext
 
+# import pip parse_requirements
 try:
     # pip >= 10
+    # noinspection PyProtectedMember, PyPackageRequirements
     from pip._internal.req import parse_requirements
+
+    # noinspection PyRedeclaration
+    def parse_requirements(filename):
+        return parse_requirements(filename, session=False)
 except ImportError:
     # pip <= 9.0.3
+    # noinspection PyPackageRequirements
     from pip.req import parse_requirements
 
 
