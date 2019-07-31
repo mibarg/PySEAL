@@ -10,6 +10,7 @@ from distutils import sysconfig
 from distutils.core import setup, Extension
 from distutils.command.install import install
 from distutils.command.build_ext import build_ext
+from pip.req import parse_requirements
 
 
 class InstallCommand(install):
@@ -180,14 +181,7 @@ setup(
     author="mibarg",
     author_email="mibarg@users.noreply.github.com",
     description="Python-native homomorphic encryption based on SEAL v2.3",
-    install_requires=[
-        "setuptools",
-        "pybind11",
-        "cppimport",
-        "pytest",
-        "numpy",
-        "sympy"
-    ],
+    install_requires=parse_requirements("requirements.txt"),
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
     ext_modules=ext_modules,
