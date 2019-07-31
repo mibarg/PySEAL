@@ -10,7 +10,13 @@ from distutils import sysconfig
 from distutils.core import setup, Extension
 from distutils.command.install import install
 from distutils.command.build_ext import build_ext
-from pip.req import parse_requirements
+
+try:
+    # pip >= 10
+    from pip._internal.req import parse_requirements
+except ImportError:
+    # pip <= 9.0.3
+    from pip.req import parse_requirements
 
 
 class InstallCommand(install):
