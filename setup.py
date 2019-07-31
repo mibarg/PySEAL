@@ -11,19 +11,19 @@ from distutils.core import setup, Extension
 from distutils.command.install import install
 from distutils.command.build_ext import build_ext
 
-# import pip parse_requirements
-try:
-    # pip >= 10
-    # noinspection PyProtectedMember, PyPackageRequirements
-    from pip._internal.req import parse_requirements
 
-    # noinspection PyRedeclaration
-    def parse_requirements(filename):
-        return parse_requirements(filename, session=False)
-except ImportError:
-    # pip <= 9.0.3
-    # noinspection PyPackageRequirements
-    from pip.req import parse_requirements
+def parse_requirements(file_name: str):
+    """
+    Parse pip requirements.txt file
+    """
+    with open(file_name, "r") as fp:
+        reqs = []
+        for line in fp:
+            req = line.split('#')[0].strip()
+            if len(req) > 0:
+                reqs.append(req)
+
+        return reqs
 
 
 class InstallCommand(install):
