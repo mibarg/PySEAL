@@ -12,20 +12,6 @@ from distutils.command.install import install
 from distutils.command.build_ext import build_ext
 
 
-def parse_requirements(file_name: str):
-    """
-    Parse pip requirements.txt file
-    """
-    with open(file_name, "r") as fp:
-        reqs = []
-        for line in fp:
-            req = line.split('#')[0].strip()
-            if len(req) > 0:
-                reqs.append(req)
-
-        return reqs
-
-
 class InstallCommand(install):
     """
     Add a build-seal flag that builds Microsoft SEAL v2.3 from project include/ dir.
@@ -194,7 +180,14 @@ setup(
     author="mibarg",
     author_email="mibarg@users.noreply.github.com",
     description="Python-native homomorphic encryption based on SEAL v2.3",
-    install_requires=parse_requirements("requirements.txt"),
+    install_requires=[
+        "setuptools",
+        "pybind11",
+        "cppimport",
+        "pytest",
+        "numpy",
+        "sympy"
+    ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
     ext_modules=ext_modules,
