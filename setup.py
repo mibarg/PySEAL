@@ -6,6 +6,7 @@ import traceback
 
 from subprocess import Popen, PIPE, STDOUT
 
+import setuptools
 from distutils import sysconfig
 from distutils.core import setup, Extension
 from distutils.command.install import install
