@@ -51,6 +51,7 @@ Docker:
 
 ```bash
 git clone https://github.com/mibarg/sealed
+cd sealed
 docker build -t sealed-container-name -f deploy/Dockerfile .
 ```
 
