@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/mibarg/sealed.svg?token=YtpyWjLrpzZ5G11Nfbjk&branch=master)](https://travis-ci.com/mibarg/sealed)
 
-`sealed` builds on top of [PySEAL](https://github.com/Lab41/PySEAL) to provide Python-native homomorphic 
+`sealed` builds on top of [PySEAL](https://github.com/Lab41/PySEAL) to provide a Python-native homomorphic 
 encryption library based on Microsoft SEAL v2.3.
 By Python-native, we mean that it enables using homomorphic operations on CipherText using 
 familiar Python syntax such as `+`, `*` and `**`.
