@@ -28,6 +28,9 @@ print("Dec[4.4 * Enc[%s] + Enc[%s] ** 3] = %s" % (secret_1, secret_2, res))
 # >> Dec[4.4 * Enc[1.0] + Enc[2.0] ** 3] = 12.4
 ```
 
+The code is heavily documented, and tries to be intuitive based on Python operator's expected behavior.
+For usage samples, see tests dir.
+
 # Install
 
 `sealed` is available for Python version >= 3.5.
