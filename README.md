@@ -42,7 +42,9 @@ For usage samples, see tests dir.
 On Linux:
 
 ```bash
-pip3 install sealed --install-option="--build-seal"
+git clone https://github.com/mibarg/sealed
+cd sealed
+pip3 install . --install-option="--build-seal"
 ```
 
 Docker:
