@@ -1,3 +1,7 @@
+<< Looking for contributors to help with SEAL v3 migration >>
+
+# Intro
+
 [![Build Status](https://travis-ci.com/mibarg/sealed.svg?token=YtpyWjLrpzZ5G11Nfbjk&branch=master)](https://travis-ci.com/mibarg/sealed)
 
 `sealed` builds on top of [PySEAL](https://github.com/Lab41/PySEAL) to provide a Python-native homomorphic 
